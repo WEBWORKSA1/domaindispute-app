@@ -1,0 +1,59 @@
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght,SOFT@9..144,300;9..144,400;9..144,500;9..144,600;9..144,700;9..144,800;9..144,900&family=JetBrains+Mono:wght@400;500;600&family=Inter+Tight:wght@300;400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    color-scheme: light;
+  }
+
+  html {
+    @apply scroll-smooth;
+  }
+
+  body {
+    @apply bg-paper text-ink font-sans antialiased;
+  }
+
+  ::selection {
+    @apply bg-oxblood text-bone;
+  }
+
+  :focus-visible {
+    @apply outline-2 outline-offset-2 outline-oxblood;
+  }
+}
+
+@layer components {
+  .h-display {
+    font-family: 'Fraunces', Georgia, serif;
+    font-variation-settings: 'opsz' 144, 'SOFT' 30;
+    @apply font-light tracking-tight;
+  }
+
+  .h-display em {
+    font-style: italic;
+    @apply text-oxblood font-medium;
+    font-variation-settings: 'opsz' 144, 'SOFT' 80;
+  }
+
+  .eyebrow {
+    @apply font-mono text-xs uppercase tracking-[0.22em] text-oxblood inline-flex items-center gap-2.5;
+  }
+
+  .bg-rules {
+    background-image: repeating-linear-gradient(
+      0deg,
+      transparent 0,
+      transparent 31px,
+      rgba(168, 122, 60, 0.07) 31px,
+      rgba(168, 122, 60, 0.07) 32px
+    );
+  }
+
+  .pill {
+    @apply font-mono text-[10px] uppercase tracking-wider px-2 py-0.5 inline-flex items-center;
+  }
+}
