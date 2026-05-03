@@ -1,0 +1,86 @@
+name: Scrapers
+
+on:
+  schedule:
+    # Hourly: live filings
+    - cron: '0 * * * *'
+    # Daily 06:00 UTC: WIPO current year
+    - cron: '0 6 * * *'
+    # Weekly Monday 07:00 UTC: Forum
+    - cron: '0 7 * * 1'
+  workflow_dispatch:
+    inputs:
+      job:
+        description: 'Which scraper to run'
+        required: true
+        type: choice
+        options:
+          - wipo_live_filings_hourly
+          - wipo_current_year
+          - wipo_backfill_2024
+          - forum_weekly
+      max_cases:
+        description: 'Cap cases (blank = unlimited)'
+        required: false
+        type: string
+
+jobs:
+  wipo-live:
+    if: github.event_name == 'schedule' && github.event.schedule == '0 * * * *' || (github.event_name == 'workflow_dispatch' && inputs.job == 'wipo_live_filings_hourly')
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install -e ".[dev]"
+      - run: python -m scrapers.live.scraper ${{ inputs.max_cases && format('--max {0}', inputs.max_cases) || '' }}
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+
+  wipo-current:
+    if: github.event_name == 'schedule' && github.event.schedule == '0 6 * * *' || (github.event_name == 'workflow_dispatch' && inputs.job == 'wipo_current_year')
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install -e ".[dev]"
+      - run: python -m scrapers.wipo.scraper --year 2025 ${{ inputs.max_cases && format('--max {0}', inputs.max_cases) || '' }}
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+
+  wipo-backfill:
+    if: github.event_name == 'workflow_dispatch' && inputs.job == 'wipo_backfill_2024'
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install -e ".[dev]"
+      - run: python -m scrapers.wipo.scraper --year 2024 ${{ inputs.max_cases && format('--max {0}', inputs.max_cases) || '' }}
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+
+  forum-weekly:
+    if: github.event_name == 'schedule' && github.event.schedule == '0 7 * * 1' || (github.event_name == 'workflow_dispatch' && inputs.job == 'forum_weekly')
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install -e ".[dev]"
+      - run: python -m scrapers.forum.scraper ${{ inputs.max_cases && format('--max {0}', inputs.max_cases) || '' }}
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
