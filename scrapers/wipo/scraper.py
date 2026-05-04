@@ -1,4 +1,21 @@
-"""WIPO scraper - UDRP gTLD and ccTLD decision indexer."""
+"""
+WIPO scraper - UDRP gTLD decision indexer.
+
+Strategy:
+  WIPO publishes decisions in paginated chunks of 200 per page:
+    list.jsp?prefix=D&year=YYYY&seq_min=N&seq_max=N+199
+  
+  We iterate chunks (1-199, 200-399, 400-599, ...) until either:
+    - An empty page is returned (no cases yet for that range)
+    - The --max cap is reached
+  
+  Each chunk's HTML contains a list of links to individual decision pages.
+  Each link has the case number (D2025-XXXX) in the URL or text.
+
+Rate limit: 3 seconds between requests (PoliteClient).
+
+Reference: Architecture section 04 Track A.
+"""
 
 from __future__ import annotations
 
@@ -22,18 +39,28 @@ from scrapers.common import (
 console = Console()
 
 WIPO_BASE = "https://www.wipo.int"
-WIPO_CASES_INDEX = "https://www.wipo.int/amc/en/domains/casesx/all.html"
-WIPO_YEAR_INDEX = "https://www.wipo.int/amc/en/domains/decisionsx/{year}/index.html"
+# Paginated list URL - chunks of 200 cases per page
+WIPO_LIST_URL = (
+    "https://www.wipo.int/amc/en/domains/decisionsx/list.jsp"
+    "?prefix=D&year={year}&seq_min={seq_min}&seq_max={seq_max}"
+)
+# Page size used by WIPO
+CHUNK_SIZE = 200
+# Max chunks per year (5600 cases / 200 = 28 chunks)
+MAX_CHUNKS_PER_YEAR = 35
 
+# WIPO case number pattern: D2024-1234, DAI2024-0053, DCO2024-0001, etc.
 CASE_NUMBER_RE = re.compile(r"\b(D[A-Z]*[0-9]{4}-[0-9]{4})\b")
 
 
 def parse_case_number(text: str) -> str | None:
+    """Extract WIPO case number from a string."""
     m = CASE_NUMBER_RE.search(text)
     return m.group(1) if m else None
 
 
 def parse_date_iso(text: str) -> date | None:
+    """Parse 'June 12, 2025' or '2025-06-12' into a date."""
     text = text.strip()
     try:
         return datetime.strptime(text, "%Y-%m-%d").date()
@@ -47,206 +74,158 @@ def parse_date_iso(text: str) -> date | None:
     return None
 
 
-def detect_outcome(text: str) -> str | None:
-    rdnh_re = re.compile(r"\breverse\s+domain\s+name\s+hijacking\b|\bRDNH\b", re.IGNORECASE)
-    if rdnh_re.search(text):
-        return "RDNH"
-
-    if re.search(r"\b(?:proceedings?\s+(?:are\s+)?withdrawn|case\s+terminated|complaint\s+withdrawn)\b", text, re.IGNORECASE):
-        return "WITHDRAWN"
-
-    if re.search(r"\b(?:domain\s+name\s+(?:is\s+)?suspended|suspension\s+ordered)\b", text, re.IGNORECASE):
-        return "SUSPEND"
-
-    if re.search(
-        r"\b(?:order(?:ed|s)?\s+(?:that\s+)?(?:the\s+)?(?:disputed\s+)?domain(?:\s+name)?s?\s+(?:be\s+)?(?:to\s+be\s+)?transferred|"
-        r"transfer\s+(?:of\s+)?(?:the\s+)?(?:disputed\s+)?domain|"
-        r"domain(?:\s+name)?s?\s+(?:is|shall\s+be|are)\s+transferred|"
-        r"hereby\s+transferred|"
-        r"be\s+transferred\s+to\s+(?:the\s+)?[Cc]omplainant)\b",
-        text,
-        re.IGNORECASE,
-    ):
-        return "TRANSFER"
-
-    if re.search(
-        r"\b(?:complaint\s+is\s+denied|complaint\s+denied|denying\s+the\s+complaint|deny\s+the\s+complaint)\b",
-        text,
-        re.IGNORECASE,
-    ):
-        return "DENY"
-
-    return None
-
-
-def parse_index_page(html: str, year: int) -> list[dict[str, Any]]:
+def parse_list_chunk(html: str) -> list[dict[str, Any]]:
+    """
+    Parse a WIPO list.jsp chunk page and extract case stubs.
+    
+    Returns a list of dicts with keys: case_number, decision_url, domains, decision_date.
+    """
     soup = BeautifulSoup(html, "lxml")
     cases: list[dict[str, Any]] = []
+    seen: set[str] = set()
 
-    for row in soup.find_all("tr"):
-        if not isinstance(row, Tag):
-            continue
-        cells = row.find_all(["td", "th"])
-        if len(cells) < 2:
+    # WIPO list pages have <a href="/amc/en/domains/decisions/html/YYYY/dXXXX-NNNN.html"> links
+    for link in soup.find_all("a", href=True):
+        if not isinstance(link, Tag):
             continue
 
-        row_text = row.get_text(" ", strip=True)
-        case_number = parse_case_number(row_text)
+        href_attr = link.get("href")
+        if isinstance(href_attr, list):
+            href_attr = href_attr[0]
+        href = str(href_attr or "")
+
+        # Only interested in decision document links
+        if "/decisions/" not in href and "decisionsx" not in href:
+            continue
+
+        link_text = link.get_text(" ", strip=True)
+        case_number = parse_case_number(link_text) or parse_case_number(href)
         if not case_number:
             continue
-
-        link = row.find("a", href=re.compile(r"decisions"))
-        if not isinstance(link, Tag) or not link.get("href"):
+        if case_number in seen:
             continue
 
-        href = link["href"]
-        if isinstance(href, list):
-            href = href[0]
-        decision_url = urljoin(WIPO_BASE, str(href))
+        decision_url = urljoin(WIPO_BASE, href)
 
+        # Look at parent row/element for domain names and date
         domains: list[str] = []
-        for cell in cells:
-            cell_text = cell.get_text(" ", strip=True)
-            for token in cell_text.split():
-                if "." in token and len(token) >= 4 and " " not in token:
-                    cleaned = token.strip("<>(),;.")
-                    if "." in cleaned and not cleaned.startswith(".") and not cleaned.endswith("."):
-                        if not cleaned.startswith("http") and not parse_case_number(cleaned):
-                            domains.append(cleaned)
+        decision_date: date | None = None
 
-        decision_date = None
-        for cell in cells:
-            d = parse_date_iso(cell.get_text(strip=True))
-            if d:
-                decision_date = d
+        parent_text = ""
+        for ancestor in link.parents:
+            if isinstance(ancestor, Tag) and ancestor.name in ("tr", "li", "p"):
+                parent_text = ancestor.get_text(" ", strip=True)
                 break
 
+        # Extract domain-like tokens
+        for token in parent_text.split():
+            cleaned = token.strip("<>(),;.\"'")
+            if (
+                "." in cleaned
+                and len(cleaned) >= 4
+                and not cleaned.startswith("http")
+                and not cleaned.startswith(".")
+                and not cleaned.endswith(".")
+                and not parse_case_number(cleaned)
+            ):
+                domains.append(cleaned)
+
+        # Extract a date
+        date_match = re.search(
+            r"\b(?:January|February|March|April|May|June|July|"
+            r"August|September|October|November|December)"
+            r"\s+\d{1,2},?\s+(?:19|20)\d{2}\b",
+            parent_text,
+        )
+        if date_match:
+            decision_date = parse_date_iso(date_match.group(0))
+
+        seen.add(case_number)
         cases.append({
             "case_number": case_number,
             "decision_url": decision_url,
             "domains": list(set(domains)),
             "decision_date": decision_date,
-            "year": year,
         })
 
     return cases
 
 
-def parse_decision_page(html: str) -> dict[str, Any]:
-    soup = BeautifulSoup(html, "lxml")
-    full_text = soup.get_text(" ", strip=True)
+async def scrape_wipo_year(year: int, max_cases: int | None = None) -> None:
+    """
+    Scrape all WIPO decisions for a given year by paginating through chunks.
+    
+    If max_cases is set, stop after collecting that many cases total.
+    """
+    scraper_name = f"wipo_{year}_index"
 
-    result: dict[str, Any] = {
-        "complainant_name": None,
-        "respondent_name": None,
-        "panelists": [],
-        "outcome": detect_outcome(full_text),
-        "panel_size": None,
-        "domains_from_decision": [],
-    }
+    async with track_run(scraper_name) as run, PoliteClient() as client:
+        console.log(f"[bold]Scraping WIPO {year}[/bold] - paginated chunks")
 
-    comp_match = re.search(
-        r"(?:Complainant\s+is|Complainants?\s+are)\s+([^.,]+?)(?:\s+of\s+|\s*,)",
-        full_text[:8000],
-    )
-    if comp_match:
-        result["complainant_name"] = comp_match.group(1).strip()[:255]
+        total_cases = 0
 
-    resp_match = re.search(
-        r"(?:Respondent\s+is|Respondents?\s+are)\s+([^.,]+?)(?:\s+of\s+|\s*,)",
-        full_text[:8000],
-    )
-    if resp_match:
-        result["respondent_name"] = resp_match.group(1).strip()[:255]
+        for chunk_idx in range(MAX_CHUNKS_PER_YEAR):
+            seq_min = chunk_idx * CHUNK_SIZE + 1
+            seq_max = (chunk_idx + 1) * CHUNK_SIZE - 1
+            url = WIPO_LIST_URL.format(year=year, seq_min=seq_min, seq_max=seq_max)
 
-    panel_section = re.search(
-        r"(?:Panel|Panelist[s]?)[:\s]+([A-Z][a-zA-Z\u00C0-\u00FF\s,.\-']{5,150})",
-        full_text,
-    )
-    if panel_section:
-        names_raw = panel_section.group(1)
-        names = [n.strip() for n in re.split(r"[,;]|\sand\s", names_raw) if n.strip()]
-        result["panelists"] = [
-            n for n in names
-            if len(n) > 3 and len(n) < 80 and n[0].isupper() and not any(c.isdigit() for c in n)
-        ][:5]
-        result["panel_size"] = 3 if len(result["panelists"]) >= 3 else 1
+            console.log(f"[dim]Chunk {chunk_idx + 1}: {seq_min}-{seq_max}[/dim]")
 
-    return result
+            try:
+                html = await client.get(url)
+            except Exception as e:
+                run.add_error(url, e)
+                console.log(f"  [red]Failed to fetch:[/red] {e}")
+                if chunk_idx == 0:
+                    run.notes = f"Failed to fetch first chunk: {e}"
+                    return
+                break
 
+            chunk_cases = parse_list_chunk(html)
 
-async def scrape_year(
-    year: int,
-    fetch_full_decisions: bool = True,
-    max_cases: int | None = None,
-) -> None:
-    async with track_run(f"wipo_year_{year}") as run, PoliteClient() as client:
-        index_url = WIPO_YEAR_INDEX.format(year=year)
-        console.log(f"[bold]Fetching index:[/bold] {index_url}")
+            if not chunk_cases:
+                console.log(f"  [yellow]No cases in chunk {chunk_idx + 1}, stopping[/yellow]")
+                break
 
-        try:
-            index_html = await client.get(index_url)
-        except Exception as e:
-            run.add_error(index_url, e)
-            run.notes = f"Failed to fetch year index: {e}"
-            return
+            console.log(f"  [green]Found {len(chunk_cases)} cases[/green]")
 
-        cases = parse_index_page(index_html, year)
-        console.log(f"[bold green]Found {len(cases)} cases in {year} index[/bold green]")
+            for case_stub in chunk_cases:
+                if max_cases is not None and total_cases >= max_cases:
+                    console.log(f"[bold cyan]Reached --max {max_cases}, stopping[/bold cyan]")
+                    return
 
-        if max_cases:
-            cases = cases[:max_cases]
+                scraped = ScrapedCase(
+                    provider="WIPO",
+                    case_number=case_stub["case_number"],
+                    decision_url=case_stub["decision_url"],
+                    decision_date=case_stub.get("decision_date"),
+                    domains=case_stub.get("domains", []),
+                )
 
-        for i, case_stub in enumerate(cases, start=1):
-            console.log(
-                f"[dim]({i}/{len(cases)})[/dim] "
-                f"[bold]{case_stub['case_number']}[/bold]"
-            )
-
-            scraped = ScrapedCase(
-                provider="WIPO",
-                case_number=case_stub["case_number"],
-                decision_url=case_stub["decision_url"],
-                decision_date=case_stub.get("decision_date"),
-                domains=case_stub.get("domains", []),
-            )
-
-            if fetch_full_decisions:
                 try:
-                    decision_html = await client.get(case_stub["decision_url"])
-                    parsed = parse_decision_page(decision_html)
-                    scraped.complainant_name = parsed["complainant_name"]
-                    scraped.respondent_name = parsed["respondent_name"]
-                    scraped.panelists = parsed["panelists"]
-                    scraped.panel_size = parsed["panel_size"]
-                    scraped.outcome = parsed["outcome"]
+                    inserted, updated = upsert_case(scraped)
+                    if inserted:
+                        run.cases_added += 1
+                    elif updated:
+                        run.cases_updated += 1
+                    total_cases += 1
                 except Exception as e:
                     run.add_error(case_stub["decision_url"], e)
                     console.log(
-                        f"[yellow]Could not fetch decision page: "
-                        f"{type(e).__name__}: {e}[/yellow]"
+                        f"  [red]Upsert failed for {case_stub['case_number']}:[/red] {e}"
                     )
 
-            try:
-                inserted, updated = upsert_case(scraped)
-                if inserted:
-                    run.cases_added += 1
-                    console.log(f"  [green]+[/green] inserted {scraped.case_number}")
-                elif updated:
-                    run.cases_updated += 1
-                    console.log(f"  [cyan]~[/cyan] updated {scraped.case_number}")
-            except Exception as e:
-                run.add_error(case_stub["decision_url"], e)
-                console.log(f"  [red]upsert failed:[/red] {e}")
+        console.log(
+            f"[bold green]Done. Added: {run.cases_added}, Updated: {run.cases_updated}[/bold green]"
+        )
 
 
 @click.command()
-@click.option("--year", type=int, required=True, help="Decision year (e.g., 2025)")
-@click.option("--no-full", is_flag=True, help="Skip fetching full decision pages (faster)")
-@click.option("--max", "max_cases", type=int, default=None, help="Cap on cases for testing")
-def main(year: int, no_full: bool, max_cases: int | None) -> None:
-    """Run the WIPO scraper for a specific year."""
-    asyncio.run(scrape_year(year, fetch_full_decisions=not no_full, max_cases=max_cases))
+@click.option("--year", type=int, required=True, help="Year to scrape (e.g., 2025)")
+@click.option("--max", "max_cases", type=int, default=None, help="Cap on cases (for testing)")
+def main(year: int, max_cases: int | None) -> None:
+    """Run the WIPO scraper for a given year."""
+    asyncio.run(scrape_wipo_year(year, max_cases))
 
 
 if __name__ == "__main__":
