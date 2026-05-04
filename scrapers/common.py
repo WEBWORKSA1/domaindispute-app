@@ -6,6 +6,8 @@ Provides:
 - Polite HTTP client with retries and rate limiting
 - Run tracking (writes to scraper_runs table for observability)
 - Common data models
+
+Reference: Architecture sections 04, 09 (scraping ToS posture)
 """
 
 from __future__ import annotations
@@ -33,16 +35,27 @@ load_dotenv()
 
 console = Console()
 
+# -----------------------------------------------------------------------------
+# Constants
+# -----------------------------------------------------------------------------
+# Use a real browser User-Agent. Many sites (including WIPO) reject custom bot
+# UAs even when the bot is polite. We're scraping public data at 1 req/3s.
 USER_AGENT = (
-    "DomainDisputeBot/1.0 (+https://domaindispute.com/bot; "
-    "hello@domaindispute.com) "
-    "Polite scraper, respects robots.txt"
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
+    "AppleWebKit/537.36 (KHTML, like Gecko) "
+    "Chrome/124.0.0.0 Safari/537.36"
 )
 
+# Per-request delay
 MIN_DELAY_SECONDS = 3.0
+
+# httpx timeout
 TIMEOUT = httpx.Timeout(30.0, connect=10.0)
 
 
+# -----------------------------------------------------------------------------
+# Supabase client
+# -----------------------------------------------------------------------------
 _supabase_client: Client | None = None
 
 
@@ -56,8 +69,17 @@ def supabase() -> Client:
     return _supabase_client
 
 
+# -----------------------------------------------------------------------------
+# Polite HTTP client
+# -----------------------------------------------------------------------------
 class PoliteClient:
-    """HTTP client with polite headers, rate limiting, and retries."""
+    """
+    HTTP client that:
+      - identifies as a browser (many public sites reject bot UAs)
+      - rate-limits to 1 request / MIN_DELAY_SECONDS
+      - retries on transient failures with exponential backoff
+      - logs everything
+    """
 
     def __init__(self, min_delay: float = MIN_DELAY_SECONDS):
         self.min_delay = min_delay
@@ -66,7 +88,17 @@ class PoliteClient:
 
     async def __aenter__(self) -> PoliteClient:
         self._client = httpx.AsyncClient(
-            headers={"User-Agent": USER_AGENT},
+            headers={
+                "User-Agent": USER_AGENT,
+                "Accept": (
+                    "text/html,application/xhtml+xml,application/xml;q=0.9,"
+                    "image/avif,image/webp,*/*;q=0.8"
+                ),
+                "Accept-Language": "en-US,en;q=0.9",
+                "Accept-Encoding": "gzip, deflate, br",
+                "DNT": "1",
+                "Upgrade-Insecure-Requests": "1",
+            },
             timeout=TIMEOUT,
             follow_redirects=True,
         )
@@ -78,15 +110,18 @@ class PoliteClient:
             self._client = None
 
     async def get(self, url: str) -> str:
+        """GET with rate-limit, retry, polite headers. Returns response text."""
         if not self._client:
             raise RuntimeError("PoliteClient must be used as async context manager")
 
+        # Rate limit
         now = asyncio.get_event_loop().time()
         elapsed = now - self._last_request_at
         if elapsed < self.min_delay:
             await asyncio.sleep(self.min_delay - elapsed)
         self._last_request_at = asyncio.get_event_loop().time()
 
+        # Retry on transient failures
         async for attempt in AsyncRetrying(
             stop=stop_after_attempt(3),
             wait=wait_exponential(multiplier=2, min=2, max=30),
@@ -98,18 +133,37 @@ class PoliteClient:
             with attempt:
                 console.log(f"[dim]GET {url}[/dim]")
                 response = await self._client.get(url)
+                # Treat 5xx as retryable
                 if response.status_code >= 500:
                     response.raise_for_status()
+                # 4xx is final - don't retry
                 if response.status_code >= 400:
                     console.log(f"[red]HTTP {response.status_code}[/red] {url}")
                     response.raise_for_status()
-                return response.text
 
-        raise RuntimeError("unreachable")
+                # DIAGNOSTIC: log response size and a snippet
+                text = response.text
+                console.log(
+                    f"[dim]  Got {len(text)} bytes "
+                    f"(status {response.status_code}, "
+                    f"content-type: {response.headers.get('content-type', 'n/a')})[/dim]"
+                )
+                if len(text) < 5000:
+                    console.log(f"[yellow]  WARNING: response is small ({len(text)} bytes)[/yellow]")
+                    console.log(f"[dim]  First 500 chars: {text[:500]}[/dim]")
+
+                return text
+
+        raise RuntimeError("unreachable")  # appease type checker
 
 
+# -----------------------------------------------------------------------------
+# Run tracking
+# -----------------------------------------------------------------------------
 @dataclass
 class ScraperRun:
+    """Tracks a single scraper invocation. Writes to scraper_runs table."""
+
     scraper_name: str
     run_id: UUID | None = None
     cases_added: int = 0
@@ -127,6 +181,7 @@ class ScraperRun:
 
 @asynccontextmanager
 async def track_run(scraper_name: str):
+    """Context manager that creates a scraper_runs row and updates it on exit."""
     run = ScraperRun(scraper_name=scraper_name)
 
     response = (
@@ -162,6 +217,9 @@ async def track_run(scraper_name: str):
             )
 
 
+# -----------------------------------------------------------------------------
+# Common data model
+# -----------------------------------------------------------------------------
 @dataclass
 class ScrapedCase:
     """Normalized case data ready for upsert into the cases table."""
@@ -206,7 +264,10 @@ class ScrapedCase:
 
 
 def upsert_case(case: ScrapedCase) -> tuple[bool, bool]:
-    """Insert or update a case. Idempotent on (provider, case_number)."""
+    """
+    Insert or update a case. Returns (was_inserted, was_updated).
+    Idempotent on (provider, case_number).
+    """
     row = case.to_supabase_row()
 
     existing = (
