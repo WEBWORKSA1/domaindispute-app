@@ -45,10 +45,8 @@ async def scrape_live_filings(max_filings: int | None = 50) -> None:
     async with track_run("wipo_live_filings_hourly") as run, PoliteClient() as client:
         console.log(f"[bold]Live feed scrape[/bold] - target {target_count} latest filings for {current_year}")
 
-        # First, find the highest sequence number that exists for the current year.
-        # We binary-search by trying chunks at decreasing starting points.
-        # WIPO chunks are 200-wide. Start by probing chunk 30 (5800-5999) and
-        # work down until we find one with cases.
+        # Find the highest chunk that has cases for the current year.
+        # Probe from chunk 30 (5800-5999) downward.
         latest_chunk_idx = None
         for chunk_idx in range(30, -1, -1):
             seq_min = chunk_idx * 200 + 1
@@ -73,7 +71,7 @@ async def scrape_live_filings(max_filings: int | None = 50) -> None:
             run.notes = f"No cases found for {current_year}"
             return
 
-        # Collect cases from latest chunk + previous chunk (if needed) until we have target_count
+        # Collect cases from latest chunk + previous chunk (if needed)
         all_cases: list[dict[str, Any]] = []
         for chunk_idx in range(latest_chunk_idx, max(latest_chunk_idx - 2, -1), -1):
             seq_min = chunk_idx * 200 + 1
@@ -88,19 +86,17 @@ async def scrape_live_filings(max_filings: int | None = 50) -> None:
                 continue
 
             chunk_cases = parse_list_chunk(html)
-            # Sort by case number DESC (highest sequence = most recent)
             chunk_cases.sort(key=lambda c: c["case_number"], reverse=True)
             all_cases.extend(chunk_cases)
 
             if len(all_cases) >= target_count:
                 break
 
-        # Take only the top N
         all_cases = sorted(all_cases, key=lambda c: c["case_number"], reverse=True)[:target_count]
         console.log(f"[green]Top {len(all_cases)} most recent cases collected[/green]")
 
-        # For each, check if it's already a decided case in our DB
-        decided_case_numbers = set()
+        # Check which are already decided in the cases table
+        decided_case_numbers: set[str] = set()
         if all_cases:
             case_numbers = [c["case_number"] for c in all_cases]
             existing = (
@@ -113,14 +109,14 @@ async def scrape_live_filings(max_filings: int | None = 50) -> None:
             )
             decided_case_numbers = {row["case_number"] for row in (existing.data or [])}
 
-        # Upsert into live_filings
+        # Upsert into live_filings using ACTUAL schema columns:
+        # provider, case_number, filing_date, domains, complainant, status, filing_url
         added = 0
         promoted = 0
         for case_stub in all_cases:
             case_number = case_stub["case_number"]
             status = "DECIDED" if case_number in decided_case_numbers else "FILED"
 
-            # Upsert by (provider, case_number)
             existing_filing = (
                 supabase()
                 .table("live_filings")
@@ -136,13 +132,11 @@ async def scrape_live_filings(max_filings: int | None = 50) -> None:
                 "case_number": case_number,
                 "filing_url": case_stub.get("decision_url"),
                 "domains": case_stub.get("domains", []),
-                "complainant_name": case_stub.get("complainant_name"),
-                "respondent_name": case_stub.get("respondent_name"),
+                "complainant": case_stub.get("complainant_name"),  # match schema column name
                 "status": status,
             }
 
             if existing_filing.data:
-                # Update only if status changed
                 if existing_filing.data[0].get("status") != status:
                     supabase().table("live_filings").update({"status": status}).eq(
                         "id", existing_filing.data[0]["id"]
@@ -164,7 +158,6 @@ async def scrape_live_filings(max_filings: int | None = 50) -> None:
 @click.command()
 @click.option("--max", "max_filings", type=int, default=50, help="Max live filings to keep (default 50)")
 def main(max_filings: int) -> None:
-    """Run the live filings scraper."""
     asyncio.run(scrape_live_filings(max_filings))
 
 
