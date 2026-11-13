@@ -1,177 +1,309 @@
-import { notFound } from 'next/navigation';
 import Link from 'next/link';
-import { createServerClient } from '@/lib/supabase/server';
+import { notFound } from 'next/navigation';
+import type { Metadata } from 'next';
+import { casesByComplainant, getCaseByNumber, type CaseLookup } from '@/lib/data/cases';
+import { domainAnatomy, outcomeExplainer, patternSentence, responseDeadline } from '@/lib/analysis';
+import { Breadcrumbs, CaseList, DomainList, HelpCta, OutcomeBadge } from '@/components/ui';
+import { JsonLd } from '@/components/json-ld';
+import { AdSlot } from '@/components/ad-slot';
+import { formatDate, num, outcomeLabel } from '@/lib/utils';
+import { SITE } from '@/lib/site';
 
-export const revalidate = 3600;
+// Rendered on first request, then cached and refreshed every 6 hours.
+export const revalidate = 21600;
+export const dynamicParams = true;
+export function generateStaticParams() {
+  return [];
+}
 
 interface PageProps {
   params: Promise<{ caseNumber: string }>;
 }
 
-async function getCase(caseNumber: string) {
-  const supabase = createServerClient();
-  const decoded = decodeURIComponent(caseNumber);
+interface View {
+  caseNumber: string;
+  provider: string;
+  domains: string[];
+  complainant: string | null;
+  respondent: string | null;
+  outcome: string | null;
+  pending: boolean;
+  filingStatus: string | null;
+  commenced: string | null;
+  indexed: string | null;
+  decisionUrl: string | null;
+  caseUrl: string | null;
+}
 
-  const { data: caseRow } = await supabase
-    .from('cases')
-    .select('id, provider, case_number, complainant_name, respondent_name, domains, outcome, decision_date, decision_url, is_published')
-    .eq('case_number', decoded)
-    .eq('is_published', true)
-    .maybeSingle();
-
-  if (caseRow) {
+function toView(r: NonNullable<CaseLookup>): View {
+  if (r.kind === 'decided') {
+    const c = r.data;
     return {
-      provider: String(caseRow.provider || 'WIPO'),
-      case_number: String(caseRow.case_number || decoded),
-      complainant: caseRow.complainant_name ? String(caseRow.complainant_name) : null,
-      respondent: caseRow.respondent_name ? String(caseRow.respondent_name) : null,
-      domains: Array.isArray(caseRow.domains) ? caseRow.domains.map(String) : [],
-      outcome: caseRow.outcome ? String(caseRow.outcome) : null,
-      decision_date: caseRow.decision_date ? String(caseRow.decision_date) : null,
-      source_url: caseRow.decision_url ? String(caseRow.decision_url) : null,
-      is_pending: false,
+      caseNumber: c.case_number,
+      provider: c.provider,
+      domains: c.domains,
+      complainant: c.complainant_name,
+      respondent: c.respondent_name && c.respondent_name !== '-' ? c.respondent_name : null,
+      outcome: c.outcome,
+      pending: false,
+      filingStatus: null,
+      commenced: r.filing?.filing_date ?? c.filing_date,
+      indexed: c.created_at,
+      decisionUrl: c.outcome && c.outcome !== 'WITHDRAWN' ? c.decision_url : null,
+      caseUrl: r.filing?.filing_url ?? null,
     };
   }
+  const f = r.data;
+  return {
+    caseNumber: f.case_number,
+    provider: f.provider,
+    domains: f.domains,
+    complainant: f.complainant,
+    respondent: null,
+    outcome: f.status === 'DECIDED' ? 'DECIDED' : null,
+    pending: f.status !== 'DECIDED',
+    filingStatus: f.status,
+    commenced: f.filing_date,
+    indexed: f.scraped_at,
+    decisionUrl: null,
+    caseUrl: f.filing_url,
+  };
+}
 
-  const { data: filing } = await supabase
-    .from('live_filings')
-    .select('id, provider, case_number, complainant, domains, status, scraped_at, filing_url')
-    .eq('case_number', decoded)
-    .maybeSingle();
-
-  if (filing) {
-    return {
-      provider: String(filing.provider || 'WIPO'),
-      case_number: String(filing.case_number || decoded),
-      complainant: filing.complainant ? String(filing.complainant) : null,
-      respondent: null,
-      domains: Array.isArray(filing.domains) ? filing.domains.map(String) : [],
-      outcome: null,
-      decision_date: null,
-      source_url: filing.filing_url ? String(filing.filing_url) : null,
-      is_pending: true,
-    };
-  }
-
-  return null;
+export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+  const { caseNumber } = await params;
+  const r = await getCaseByNumber(caseNumber);
+  if (!r) return { title: 'Case not found', robots: { index: false } };
+  const v = toView(r);
+  const domain = v.domains[0] ?? v.caseNumber;
+  const status = v.pending ? 'pending' : outcomeLabel(v.outcome).toLowerCase();
+  return {
+    title: `${v.caseNumber}: ${domain} (${status})`,
+    description: `${v.provider} UDRP case ${v.caseNumber} over ${domain}${v.domains.length > 1 ? ` and ${v.domains.length - 1} more` : ''}. Complainant: ${v.complainant ?? 'not listed'}${v.respondent ? `. Respondent: ${v.respondent}` : ''}. Status: ${status}.`,
+    alternates: { canonical: `/cases/${v.caseNumber}` },
+  };
 }
 
 export default async function CaseDetailPage({ params }: PageProps) {
   const { caseNumber } = await params;
-  const c = await getCase(caseNumber);
-  if (!c) notFound();
+  const r = await getCaseByNumber(caseNumber);
+  if (!r) notFound();
+  const v = toView(r);
 
-  const wipoSearchUrl = `https://www.wipo.int/amc/en/domains/search/text.jsp?case=${encodeURIComponent(c.case_number)}`;
+  const primary = v.domains[0] ?? v.caseNumber;
+  const anatomy = v.domains.slice(0, 6).map((d) => domainAnatomy(d, v.complainant));
+  const explainer = outcomeExplainer(v.pending ? null : v.outcome);
+  const deadline = v.pending ? responseDeadline(v.commenced) : null;
+  const history = v.complainant ? await casesByComplainant(v.complainant, v.caseNumber, 6) : { rows: [], total: 0 };
+  const helpHref = `/get-help?situation=${v.pending ? 'respondent' : 'other'}&domain=${encodeURIComponent(primary)}&case=${v.caseNumber}`;
 
   return (
-    <div style={{ maxWidth: 900, margin: '0 auto', padding: '2.5rem 1.5rem', fontFamily: 'system-ui, sans-serif' }}>
-      <div style={{ fontSize: 12, color: '#888', marginBottom: 24 }}>
-        <Link href="/" style={{ color: '#888' }}>Home</Link>
-        {' / '}
-        <Link href={c.is_pending ? '/live' : '/cases'} style={{ color: '#888' }}>
-          {c.is_pending ? 'Live Feed' : 'Case Library'}
-        </Link>
-        {' / '}
-        <span>{c.case_number}</span>
-      </div>
+    <>
+      <JsonLd
+        data={{
+          '@context': 'https://schema.org',
+          '@type': 'WebPage',
+          name: `${v.caseNumber}: ${primary}`,
+          url: `${SITE.url}/cases/${v.caseNumber}`,
+          description: `Domain name dispute ${v.caseNumber} over ${primary}.`,
+          isPartOf: { '@type': 'WebSite', name: SITE.name, url: SITE.url },
+          about: v.domains.map((d) => ({ '@type': 'Thing', name: d })),
+        }}
+      />
 
-      <div style={{ display: 'flex', gap: 12, alignItems: 'center', marginBottom: 12, flexWrap: 'wrap' }}>
-        <span style={{ background: '#1a1a1a', color: '#fff', padding: '4px 10px', fontSize: 11, fontWeight: 600, letterSpacing: 1 }}>
-          {c.provider}
-        </span>
-        <span style={{ color: '#7a0019', fontSize: 13, fontFamily: 'monospace' }}>
-          {c.case_number}
-        </span>
-        <span style={{ background: c.is_pending ? '#fef3c7' : (c.outcome === 'TRANSFER' ? '#d1fae5' : '#fee2e2'), color: c.is_pending ? '#92400e' : (c.outcome === 'TRANSFER' ? '#065f46' : '#991b1b'), padding: '4px 10px', fontSize: 11, fontWeight: 600, borderRadius: 12 }}>
-          {c.is_pending ? 'PENDING' : (c.outcome || 'PENDING')}
-        </span>
-      </div>
-
-      <h1 style={{ fontSize: 36, fontWeight: 800, marginBottom: 24, lineHeight: 1.2, wordBreak: 'break-word' }}>
-        {c.domains[0] || c.case_number}
-        {c.domains.length > 1 && (
-          <span style={{ display: 'block', fontSize: 18, fontWeight: 400, color: '#666', marginTop: 4 }}>
-            + {c.domains.length - 1} other domain{c.domains.length > 2 ? 's' : ''}
-          </span>
-        )}
-      </h1>
-
-      {c.is_pending && (
-        <div style={{ background: '#fef3c7', border: '1px solid #fde68a', padding: 16, marginBottom: 24, borderRadius: 4 }}>
-          <strong>Pending decision.</strong> This case has been filed but the panel has not issued a decision yet.
+      <section className="border-b border-bone-2 bg-bone/50">
+        <div className="wrap py-10">
+          <Breadcrumbs
+            items={[
+              v.pending ? { href: '/live', label: 'Live docket' } : { href: '/cases', label: 'Case library' },
+              { href: `/cases/${v.caseNumber}`, label: v.caseNumber },
+            ]}
+          />
+          <div className="flex flex-wrap items-center gap-3">
+            <span className="docket-no text-[15px] font-medium text-gold">
+              {v.provider} {v.caseNumber}
+            </span>
+            {v.pending ? <OutcomeBadge outcome={null} /> : <OutcomeBadge outcome={v.outcome} />}
+          </div>
+          <h1 className="h-display mt-3 break-all text-display-md text-ink">{primary}</h1>
+          {v.domains.length > 1 && <p className="mt-2 text-[15px] text-muted">and {v.domains.length - 1} more disputed domain{v.domains.length > 2 ? 's' : ''}</p>}
+          <p className="mt-4 max-w-3xl text-lg text-ink-soft">
+            {v.complainant ?? 'Complainant not yet listed'}
+            {v.respondent ? <span className="text-muted"> v. {v.respondent}</span> : null}
+          </p>
         </div>
-      )}
+      </section>
 
-      <dl style={{ marginBottom: 32 }}>
-        {c.complainant && (
-          <div style={{ marginBottom: 16 }}>
-            <dt style={{ fontSize: 11, color: '#888', textTransform: 'uppercase', letterSpacing: 1 }}>Complainant</dt>
-            <dd style={{ marginLeft: 0, fontSize: 16 }}>{c.complainant}</dd>
-          </div>
-        )}
-        {c.respondent && (
-          <div style={{ marginBottom: 16 }}>
-            <dt style={{ fontSize: 11, color: '#888', textTransform: 'uppercase', letterSpacing: 1 }}>Respondent</dt>
-            <dd style={{ marginLeft: 0, fontSize: 16 }}>{c.respondent}</dd>
-          </div>
-        )}
-        {c.decision_date && (
-          <div style={{ marginBottom: 16 }}>
-            <dt style={{ fontSize: 11, color: '#888', textTransform: 'uppercase', letterSpacing: 1 }}>Decided</dt>
-            <dd style={{ marginLeft: 0, fontSize: 16 }}>{c.decision_date}</dd>
-          </div>
-        )}
-        {c.domains.length > 1 && (
-          <div style={{ marginBottom: 16 }}>
-            <dt style={{ fontSize: 11, color: '#888', textTransform: 'uppercase', letterSpacing: 1 }}>All disputed domains</dt>
-            <dd style={{ marginLeft: 0, fontSize: 14, fontFamily: 'monospace', wordBreak: 'break-word' }}>
-              {c.domains.join(', ')}
-            </dd>
-          </div>
-        )}
-      </dl>
-
-      <div style={{ borderTop: '1px solid #ddd', paddingTop: 24, marginBottom: 32 }}>
-        <h2 style={{ fontSize: 20, fontWeight: 600, marginBottom: 12 }}>View on {c.provider}</h2>
-        <p style={{ color: '#666', marginBottom: 20, fontSize: 14 }}>
-          Some terminated/withdrawn cases do not have a published PDF. If the link below 404s, try the search link.
-        </p>
-        <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
-          {c.source_url && (
-            <a
-              href={c.source_url}
-              target="_blank"
-              rel="noopener noreferrer"
-              style={{ background: '#7a0019', color: '#fff', padding: '12px 20px', textDecoration: 'none', fontSize: 14, fontWeight: 600 }}
-            >
-              View original
-            </a>
+      <div className="wrap grid gap-12 py-10 lg:grid-cols-[1fr_320px]">
+        <article className="min-w-0">
+          {v.pending && (
+            <div className="mb-8 rounded-lg border border-amber/40 bg-legal-pad p-5">
+              <h2 className="font-serif text-xl font-semibold">This complaint is pending</h2>
+              {deadline ? (
+                <p className="mt-2 text-[15px] leading-relaxed text-ink-soft">
+                  The proceeding commenced on <strong>{formatDate(v.commenced)}</strong>. Under UDRP Rules 5(a) a response is due within 20 days, so around{' '}
+                  <strong>{formatDate(deadline.due)}</strong>, or <strong>{formatDate(deadline.extended)}</strong> with the automatic four-day extension. Confirm the exact date in the provider&apos;s notice.
+                </p>
+              ) : (
+                <p className="mt-2 text-[15px] leading-relaxed text-ink-soft">
+                  The provider is still reviewing the complaint for formal compliance. The 20-day response period starts once the proceeding formally commences.
+                </p>
+              )}
+              <Link href={helpHref} className="btn-primary mt-4">
+                Is this your domain? Get a free case review
+              </Link>
+            </div>
           )}
-          {c.provider === 'WIPO' && (
-            <a
-              href={wipoSearchUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              style={{ color: '#7a0019', textDecoration: 'underline', alignSelf: 'center', fontSize: 14 }}
-            >
-              Search WIPO database
-            </a>
-          )}
-        </div>
-      </div>
 
-      <div style={{ background: '#f5f5f0', padding: 24, borderRadius: 4 }}>
-        <h3 style={{ fontSize: 11, color: '#666', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 12 }}>About this case</h3>
-        <p style={{ color: '#666', marginBottom: 16, fontSize: 14 }}>
-          Use our free Pre-Check to assess your case strength.
-        </p>
-        <Link
-          href="/start"
-          style={{ display: 'inline-block', background: '#7a0019', color: '#fff', padding: '10px 18px', textDecoration: 'none', fontSize: 14, fontWeight: 600 }}
-        >
-          Start Free Pre-Check
-        </Link>
+          <section aria-labelledby="facts">
+            <h2 id="facts" className="font-serif text-2xl font-semibold">Case record</h2>
+            <dl className="mt-4 grid gap-x-8 gap-y-4 border-t border-bone-2 pt-4 sm:grid-cols-2">
+              <Fact label="Provider" value={v.provider} />
+              <Fact label="Case number" value={<span className="docket-no">{v.caseNumber}</span>} />
+              <Fact label="Complainant" value={v.complainant ?? '-'} />
+              <Fact label="Respondent" value={v.respondent ?? (v.pending ? 'Published with the decision' : '-')} />
+              <Fact label="Status" value={v.pending ? 'Pending' : outcomeLabel(v.outcome)} />
+              <Fact label="Commenced" value={formatDate(v.commenced)} />
+              <Fact label={`Disputed domain${v.domains.length > 1 ? 's' : ''} (${v.domains.length})`} value={<DomainList domains={v.domains} max={20} />} wide />
+            </dl>
+          </section>
+
+          <section className="mt-10" aria-labelledby="outcome">
+            <h2 id="outcome" className="font-serif text-2xl font-semibold">{explainer.title}</h2>
+            <p className="mt-3 max-w-prose text-[17px] leading-relaxed text-ink-soft">{explainer.body}</p>
+          </section>
+
+          {anatomy.length > 0 && (
+            <section className="mt-10" aria-labelledby="anatomy">
+              <h2 id="anatomy" className="font-serif text-2xl font-semibold">Domain analysis</h2>
+              <p className="mt-3 max-w-prose text-[17px] leading-relaxed text-ink-soft">{anatomy[0] ? patternSentence(anatomy[0].pattern) : null}</p>
+              <div className="mt-5 overflow-x-auto">
+                <table className="w-full min-w-[520px] text-left text-[15px]">
+                  <caption className="sr-only">Structure of each disputed domain</caption>
+                  <thead>
+                    <tr className="border-b-2 border-ink">
+                      <th className="py-2 pr-4 font-semibold">Domain</th>
+                      <th className="py-2 pr-4 font-semibold">Extension</th>
+                      <th className="py-2 pr-4 font-semibold">Length</th>
+                      <th className="py-2 pr-4 font-semibold">Relation to complainant</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {anatomy.map((a) => (
+                      <tr key={a.domain} className="border-b border-bone-2 align-top">
+                        <td className="break-all py-2.5 pr-4 font-medium">{a.domain}</td>
+                        <td className="py-2.5 pr-4">.{a.tld} <span className="text-muted">({a.tldKind})</span></td>
+                        <td className="py-2.5 pr-4 tabular-nums">{a.length}{a.hyphens ? `, ${a.hyphens} hyphen${a.hyphens > 1 ? 's' : ''}` : ''}</td>
+                        <td className="py-2.5 pr-4">
+                          {a.pattern.kind === 'exact' && 'Exact match'}
+                          {a.pattern.kind === 'brand-plus' && `Name + "${a.pattern.extra}"`}
+                          {a.pattern.kind === 'typo' && `One-character variant ("${a.pattern.variant}")`}
+                          {a.pattern.kind === 'unrelated' && <span className="text-muted">No literal match</span>}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              <p className="mt-3 text-sm text-muted">Automated comparison of the domain with the complainant&apos;s name. The panel compares the domain with the trademark actually relied on, which may differ.</p>
+            </section>
+          )}
+
+          <section className="mt-10" aria-labelledby="source">
+            <h2 id="source" className="font-serif text-2xl font-semibold">Official record</h2>
+            <ul className="mt-3 space-y-2 text-[15px]">
+              {v.decisionUrl ? (
+                <li>
+                  <a href={v.decisionUrl} target="_blank" rel="noopener noreferrer" className="link">
+                    Read the full decision on the {v.provider} website
+                  </a>
+                </li>
+              ) : (
+                <li className="text-muted">
+                  {v.pending ? 'No decision yet.' : 'No decision was published for this case.'}
+                </li>
+              )}
+              {v.caseUrl && (
+                <li>
+                  <a href={v.caseUrl} target="_blank" rel="noopener noreferrer" className="link">
+                    {v.provider} case status page
+                  </a>
+                </li>
+              )}
+              <li>
+                <Link href={`/live?q=${encodeURIComponent(primary)}`} className="link">
+                  Check for other filings over {primary}
+                </Link>
+              </li>
+            </ul>
+          </section>
+
+          <AdSlot className="my-10" />
+
+          {history.total > 0 && v.complainant && (
+            <section className="mt-10" aria-labelledby="history">
+              <h2 id="history" className="font-serif text-2xl font-semibold">Other cases by this complainant</h2>
+              <p className="mt-2 text-[15px] text-muted">
+                {v.complainant} appears in {num(history.total)} other indexed {history.total === 1 ? 'decision' : 'decisions'}.
+              </p>
+              <div className="mt-4">
+                <CaseList rows={history.rows} />
+              </div>
+              {history.total > history.rows.length && (
+                <Link href={`/cases?q=${encodeURIComponent(v.complainant)}`} className="link mt-3 inline-block text-[15px]">
+                  See all {num(history.total + 1)} cases
+                </Link>
+              )}
+            </section>
+          )}
+
+          <div className="mt-12">
+            <HelpCta
+              title={v.pending ? 'Respond before the deadline' : 'Facing a similar dispute?'}
+              body={
+                v.pending
+                  ? 'If this is your domain, the response window is short. Tell us what happened and get a free, confidential review of your options.'
+                  : 'Tell us about your domain and get a free, confidential review with similar outcomes from our library.'
+              }
+              href={helpHref}
+            />
+          </div>
+        </article>
+
+        <aside className="space-y-6 lg:sticky lg:top-24 lg:self-start">
+          <div className="panel p-5">
+            <h2 className="font-semibold">Learn more</h2>
+            <ul className="mt-3 space-y-2 text-[15px]">
+              <li><Link href="/three-element-test" className="link">The three-element test</Link></li>
+              <li><Link href="/guides/how-to-respond-to-a-udrp-complaint" className="link">How to respond to a complaint</Link></li>
+              <li><Link href="/guides/bad-faith-under-the-udrp" className="link">What counts as bad faith</Link></li>
+              <li><Link href="/guides/udrp-timeline-and-deadlines" className="link">UDRP timeline</Link></li>
+            </ul>
+          </div>
+          <div className="panel p-5">
+            <h2 className="font-semibold">Tools</h2>
+            <ul className="mt-3 space-y-2 text-[15px]">
+              <li><Link href={`/tools/domain-lookup?domain=${encodeURIComponent(primary)}`} className="link">Look up {primary}</Link></li>
+              <li><Link href="/tools/deadline-calculator" className="link">Deadline calculator</Link></li>
+              <li><Link href="/tools/fee-estimator" className="link">Fee estimator</Link></li>
+            </ul>
+          </div>
+          <AdSlot name="sidebar" />
+          <p className="text-xs leading-relaxed text-muted">
+            Data from the provider&apos;s public records{v.indexed ? `, first indexed ${formatDate(v.indexed)}` : ''}. Spotted an error?{' '}
+            <Link href={`/contact?topic=Data%20correction&case=${v.caseNumber}`} className="underline">Request a correction</Link>.
+          </p>
+        </aside>
       </div>
+    </>
+  );
+}
+
+function Fact({ label, value, wide }: { label: string; value: React.ReactNode; wide?: boolean }) {
+  return (
+    <div className={wide ? 'sm:col-span-2' : undefined}>
+      <dt className="text-sm text-muted">{label}</dt>
+      <dd className="mt-0.5 font-medium text-ink">{value}</dd>
     </div>
   );
 }
