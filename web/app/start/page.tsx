@@ -68,7 +68,7 @@ export default function StartPage() {
   }
 
   return (
-    <section className="bg-paper min-h-screen px-8 py-12">
+    <section className="bg-paper min-h-[70vh] px-4 py-12 sm:px-8">
       <div className="max-w-2xl mx-auto">
         <div className="font-mono text-[11px] tracking-[0.18em] uppercase text-oxblood mb-6 inline-flex items-center gap-3">
           <span className="w-1.5 h-1.5 rounded-full bg-oxblood animate-pulse-slow" />
@@ -245,14 +245,17 @@ export default function StartPage() {
               </div>
             )}
 
-            <div className="bg-ink text-bone p-8 mt-12">
-              <h3 className="font-serif text-xl font-semibold mb-3">Want a deeper analysis?</h3>
-              <p className="opacity-90 mb-6">
-                Tier 1 ($99) provides a full UDRP three-element scoring with similar-case retrieval and citation verification.
+            <div className="mt-12 rounded-xl bg-ink p-8 text-white">
+              <h3 className="font-serif text-xl font-semibold">Want a person to look at it?</h3>
+              <p className="mt-2 text-white/80">
+                Get a free, confidential case review. We compare your facts with similar decisions and reply by email, usually within one business day.
               </p>
-              <button className="bg-gold-bright text-ink px-8 py-3 font-semibold hover:bg-bone transition">
-                Get Tier 1 Analysis - $99 (Coming Phase 2)
-              </button>
+              <Link
+                href={`/get-help?situation=${role === 'RESPONDENT' ? 'respondent' : 'brand'}&domain=${encodeURIComponent(domain)}`}
+                className="btn-primary mt-5"
+              >
+                Get my free case review
+              </Link>
             </div>
           </div>
         )}
