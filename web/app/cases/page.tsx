@@ -1,122 +1,137 @@
 import Link from 'next/link';
 import type { Metadata } from 'next';
-import { createServerClient } from '@/lib/supabase/server';
-import { formatDate, outcomeLabel, outcomeColor, clusterLabel } from '@/lib/utils';
+import { searchCases, sanitizeQuery } from '@/lib/data/cases';
+import { CaseList, EmptyState, HelpCta, PageHeader } from '@/components/ui';
+import { SearchBox } from '@/components/search-box';
+import { AdSlot } from '@/components/ad-slot';
+import { cn, num, outcomeLabel } from '@/lib/utils';
 
-export const revalidate = 600;
+export const revalidate = 900;
 
-export const metadata: Metadata = {
-  title: 'Case Library - 100+ Recent UDRP, URS, and ccTLD Decisions',
-  description: 'Browse recent domain dispute decisions with curated analysis. Filter by provider, outcome, and pattern.',
-};
+type SP = { q?: string; outcome?: string; year?: string; page?: string };
 
-type SearchParams = { provider?: string; outcome?: string; cluster?: string; q?: string };
+export async function generateMetadata({ searchParams }: { searchParams: Promise<SP> }): Promise<Metadata> {
+  const p = await searchParams;
+  const q = sanitizeQuery(p.q);
+  const filtered = Boolean(q || p.outcome || p.year || p.page);
+  return {
+    title: q ? `UDRP decisions matching "${q}"` : 'UDRP case library: search every WIPO decision',
+    description:
+      'Search and filter thousands of UDRP domain name decisions by domain, brand, party, outcome and year. Updated automatically every day.',
+    alternates: { canonical: '/cases' },
+    robots: filtered ? { index: false, follow: true } : undefined,
+  };
+}
 
-export default async function CasesIndexPage({
-  searchParams,
-}: {
-  searchParams: Promise<SearchParams>;
-}) {
-  const params = await searchParams;
-  const supabase = createServerClient();
+const OUTCOME_FILTERS = ['TRANSFER', 'DENY', 'RDNH', 'OTHER', 'WITHDRAWN'];
+const YEARS = ['2026', '2025', '2024'];
+const PAGE_SIZE = 30;
 
-  let query = supabase
-    .from('cases')
-    .select('id, provider, case_number, decision_date, outcome, domains, complainant_name, cluster_tag, decision_url, is_curated')
-    .eq('is_published', true)
-    .order('decision_date', { ascending: false, nullsFirst: false })
-    .limit(50);
+function href(base: SP, patch: Partial<SP>) {
+  const merged = { ...base, ...patch };
+  const qs = new URLSearchParams();
+  for (const [k, v] of Object.entries(merged)) if (v) qs.set(k, String(v));
+  const s = qs.toString();
+  return s ? `/cases?${s}` : '/cases';
+}
 
-  if (params.provider) query = query.eq('provider', params.provider);
-  if (params.outcome) query = query.eq('outcome', params.outcome);
-  if (params.cluster) query = query.contains('cluster_tag', [params.cluster]);
-
-  const { data: cases } = await query;
+export default async function CasesIndexPage({ searchParams }: { searchParams: Promise<SP> }) {
+  const p = await searchParams;
+  const page = Math.max(1, parseInt(p.page ?? '1', 10) || 1);
+  const q = sanitizeQuery(p.q);
+  const { rows, total } = await searchCases({ q, outcome: p.outcome, year: p.year, page, pageSize: PAGE_SIZE });
+  const pages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+  const base: SP = { q: q || undefined, outcome: p.outcome, year: p.year };
 
   return (
     <>
-      <section className="bg-paper border-b border-ink px-8 py-16">
-        <div className="max-w-[1320px] mx-auto">
-          <div className="font-mono text-[11px] tracking-[0.18em] uppercase text-oxblood mb-6">
-            Case Library
-          </div>
-          <h1 className="h-display text-display-lg mb-6">
-            Browse <em>recent</em> decisions.
-          </h1>
-          <p className="text-xl text-ink-soft max-w-3xl">
-            {(cases?.length ?? 0).toLocaleString()} published decisions. Filter by provider, outcome, or pattern.
-          </p>
+      <PageHeader
+        crumbs={[{ href: '/cases', label: 'Case library' }]}
+        title="UDRP case library"
+        lede="Every WIPO gTLD decision we have indexed, newest first. Search by domain, brand, complainant, respondent or case number."
+      >
+        <SearchBox defaultValue={q} className="mt-6 max-w-2xl" hidden={{ outcome: p.outcome, year: p.year }} />
+      </PageHeader>
+
+      <section className="border-b border-bone-2">
+        <div className="wrap flex flex-wrap items-center gap-2 py-4 text-sm">
+          <span className="mr-1 font-semibold text-ink">Outcome</span>
+          <Chip href={href(base, { outcome: undefined, page: undefined })} active={!p.outcome} label="All" />
+          {OUTCOME_FILTERS.map((o) => (
+            <Chip key={o} href={href(base, { outcome: o, page: undefined })} active={p.outcome === o} label={outcomeLabel(o)} />
+          ))}
+          <span className="ml-3 mr-1 font-semibold text-ink">Year</span>
+          <Chip href={href(base, { year: undefined, page: undefined })} active={!p.year} label="All" />
+          {YEARS.map((y) => (
+            <Chip key={y} href={href(base, { year: y, page: undefined })} active={p.year === y} label={y} />
+          ))}
         </div>
       </section>
 
-      <section className="bg-bone border-b border-ink px-8 py-6">
-        <div className="max-w-[1320px] mx-auto flex flex-wrap gap-3 text-sm">
-          <FilterLink href="/cases" label="All" active={!params.provider && !params.outcome && !params.cluster} />
-          <FilterLink href="/cases?provider=WIPO" label="WIPO" active={params.provider === 'WIPO'} />
-          <FilterLink href="/cases?provider=FORUM" label="Forum" active={params.provider === 'FORUM'} />
-          <FilterLink href="/cases?outcome=TRANSFER" label="Transferred" active={params.outcome === 'TRANSFER'} />
-          <FilterLink href="/cases?outcome=DENY" label="Denied" active={params.outcome === 'DENY'} />
-          <FilterLink href="/cases?outcome=RDNH" label="RDNH" active={params.outcome === 'RDNH'} />
-        </div>
+      <section className="wrap py-8">
+        <p className="mb-4 text-[15px] text-muted" aria-live="polite">
+          {num(total)} {total === 1 ? 'decision' : 'decisions'}
+          {q ? ` matching "${q}"` : ''}
+          {pages > 1 ? ` - page ${page} of ${num(pages)}` : ''}
+        </p>
+
+        {rows.length === 0 ? (
+          <EmptyState
+            title="No decisions match"
+            body={q ? 'Try the brand name alone, the full domain with its extension (example.com), or a case number like D2025-1234.' : 'Clear the filters to see every decision.'}
+          >
+            <Link href={`/live${q ? `?q=${encodeURIComponent(q)}` : ''}`} className="btn-outline">
+              Search pending filings instead
+            </Link>
+          </EmptyState>
+        ) : (
+          <CaseList rows={rows} showRespondent />
+        )}
+
+        {pages > 1 && (
+          <nav aria-label="Pagination" className="mt-8 flex items-center justify-between gap-3">
+            {page > 1 ? (
+              <Link href={href(base, { page: String(page - 1) })} className="btn-outline px-4 py-2" rel="prev">
+                Previous
+              </Link>
+            ) : (
+              <span />
+            )}
+            <span className="text-sm text-muted">
+              Page {page} of {num(pages)}
+            </span>
+            {page < pages ? (
+              <Link href={href(base, { page: String(page + 1) })} className="btn-outline px-4 py-2" rel="next">
+                Next
+              </Link>
+            ) : (
+              <span />
+            )}
+          </nav>
+        )}
       </section>
 
-      <section className="bg-paper px-8 py-12">
-        <div className="max-w-[1320px] mx-auto">
-          {!cases || cases.length === 0 ? (
-            <div className="text-center py-20">
-              <p className="text-lg text-ink-soft">No cases match these filters yet.</p>
-            </div>
-          ) : (
-            <div className="divide-y divide-ink/10">
-              {cases.map((c) => (
-                <Link
-                  key={c.id}
-                  href={`/cases/${c.case_number}`}
-                  className="block py-6 hover:bg-bone/40 transition px-4 -mx-4"
-                >
-                  <div className="flex flex-wrap items-center gap-3 mb-2">
-                    <span className="font-mono text-[10px] tracking-[0.14em] uppercase text-oxblood font-semibold">
-                      {c.provider} &middot; {c.case_number}
-                    </span>
-                    {c.outcome && (
-                      <span className={`pill ${outcomeColor(c.outcome)}`}>
-                        {outcomeLabel(c.outcome)}
-                      </span>
-                    )}
-                    {c.cluster_tag?.map((tag) => (
-                      <span key={tag} className="pill bg-bone-2 text-ink">
-                        {clusterLabel(tag)}
-                      </span>
-                    ))}
-                  </div>
-                  <div className="font-serif text-xl font-semibold text-ink mb-1">
-                    {c.domains?.[0] ?? '-'}
-                    {c.domains && c.domains.length > 1 && (
-                      <span className="text-muted text-base font-normal"> +{c.domains.length - 1}</span>
-                    )}
-                  </div>
-                  <div className="text-sm text-muted">
-                    {c.complainant_name ?? '-'} &middot; {formatDate(c.decision_date)}
-                  </div>
-                </Link>
-              ))}
-            </div>
-          )}
-        </div>
+      <AdSlot className="wrap mb-10" />
+
+      <section className="wrap pb-14">
+        <HelpCta
+          title="Your domain is in a case like these?"
+          body="Get a free, confidential review of your situation and a plain-English explanation of your options."
+        />
       </section>
     </>
   );
 }
 
-function FilterLink({ href, label, active }: { href: string; label: string; active: boolean }) {
+function Chip({ href, active, label }: { href: string; active: boolean; label: string }) {
   return (
     <Link
       href={href}
-      className={`px-4 py-2 border ${
-        active
-          ? 'bg-ink text-bone border-ink'
-          : 'bg-paper text-ink border-ink/30 hover:border-ink'
-      } transition`}
+      aria-current={active ? 'true' : undefined}
+      className={cn(
+        'rounded-full border px-3 py-1.5',
+        active ? 'border-ink bg-ink text-white' : 'border-bone-2 bg-paper text-ink-soft hover:border-ink/40',
+      )}
     >
       {label}
     </Link>
