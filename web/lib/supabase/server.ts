@@ -1,50 +1,45 @@
 /**
- * Supabase server client.
- * Use in Server Components, Route Handlers, Server Actions.
+ * Supabase clients for server code.
+ *
+ * - getPublicClient(): anon key, NO cookies. Safe for cached/ISR pages because it
+ *   never touches request headers. All public reads go through this.
+ * - createServiceRoleClient(): service key for writes from API routes only.
+ *
+ * v1 used a cookie-bound SSR client for every read, which made every page fully
+ * dynamic and crashed statically rendered routes. There are no logged-in users,
+ * so cookies are unnecessary.
  */
 
-import { createServerClient as createSSRClient } from '@supabase/ssr';
-import { cookies } from 'next/headers';
-import type { Database } from '@/types/database';
+import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 
-export function createServerClient() {
-  const cookieStore = cookies();
+let publicClient: SupabaseClient | null | undefined;
+
+export function getPublicClient(): SupabaseClient | null {
+  if (publicClient !== undefined) return publicClient;
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-
   if (!url || !anonKey) {
-    throw new Error('Missing Supabase env vars');
+    publicClient = null;
+    return publicClient;
   }
-
-  return createSSRClient<Database>(url, anonKey, {
-    cookies: {
-      getAll() {
-        return cookieStore.getAll();
-      },
-      setAll(cookiesToSet) {
-        try {
-          cookiesToSet.forEach(({ name, value, options }) => cookieStore.set(name, value, options));
-        } catch {
-          // Server Components can't set cookies
-        }
-      },
-    },
+  publicClient = createClient(url, anonKey, {
+    auth: { persistSession: false, autoRefreshToken: false },
   });
+  return publicClient;
 }
 
-export function createServiceRoleClient() {
-  const { createClient } = require('@supabase/supabase-js');
+/** Back-compat alias for older imports. Throws when env is missing. */
+export function createServerClient(): SupabaseClient {
+  const client = getPublicClient();
+  if (!client) throw new Error('Missing Supabase env vars');
+  return client;
+}
+
+export function createServiceRoleClient(): SupabaseClient | null {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-
-  if (!url || !serviceKey) {
-    throw new Error('Missing service role env vars');
-  }
-
-  return createClient<Database>(url, serviceKey, {
-    auth: {
-      autoRefreshToken: false,
-      persistSession: false,
-    },
+  if (!url || !serviceKey) return null;
+  return createClient(url, serviceKey, {
+    auth: { autoRefreshToken: false, persistSession: false },
   });
 }

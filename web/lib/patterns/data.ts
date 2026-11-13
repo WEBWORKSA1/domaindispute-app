@@ -41,19 +41,19 @@ export interface PatternDefinition {
 const COMMON_FAQ_BUDGET: PatternFAQ = {
   question: 'How much does it cost to file?',
   answer:
-    'Filing fees range from $1,300 (Forum, 1-2 domains) to $1,500 (WIPO, 1-5 domains) for a single-panelist proceeding. URS - for new gTLDs only - runs about $375. Most self-represented filers complete the process for the provider fee alone. Our analysis tier is $99 to confirm your case is worth filing.',
+    'Provider fees for a single-panelist UDRP start at EUR 800 (CAC, 1-5 domains), US$1,330 (Forum, 1-2 domains) and US$1,500 (WIPO, 1-5 domains). A URS costs around US$375 at Forum. Compare them in the fee estimator at /tools/fee-estimator.',
 };
 
 const COMMON_FAQ_TIMELINE: PatternFAQ = {
   question: 'How long does it take?',
   answer:
-    'A standard UDRP completes in approximately 60 days from filing to decision. WIPO offers an expedited service that compresses this to ~30 days for $4,000. URS resolves in ~17 days but provides only suspension, not transfer.',
+    'A standard UDRP completes in approximately 60 days from filing to decision. WIPO\'s expedited track, introduced in 2026, targets a decision within about a month at a higher fee. A URS usually resolves within a few weeks but provides only suspension, not transfer.',
 };
 
 const COMMON_FAQ_SELF_REP: PatternFAQ = {
   question: 'Can I really represent myself?',
   answer:
-    'Yes. UDRP Rules section 4(b) and the supplemental rules of every ICANN-approved provider expressly permit self-representation. WIPO publishes a "Guide for Filing a UDRP Complaint" specifically for non-represented parties.',
+    'Yes. Representation is optional: the UDRP Rules only ask for details of "any representative authorized to act" for a party (paragraphs 3(b)(ii) and 5(c)(ii)), and providers such as WIPO publish model complaints and responses that parties can complete themselves.',
 };
 
 export const PATTERNS: PatternDefinition[] = [
@@ -89,7 +89,7 @@ export const PATTERNS: PatternDefinition[] = [
     passChecklist: [
       'Your trademark is registered in the relevant jurisdictions and the domain registration date postdates your registration',
       'The disputed domain incorporates the dominant element of your mark with no independent meaning',
-      'The respondents site shows PPC parking, redirect to competitors, phishing, or sale listing',
+      'The respondent’s site shows PPC parking, redirect to competitors, phishing, or sale listing',
       'You have not previously offered to purchase the domain',
       'The respondent is not commonly known by the disputed string',
       'You have screenshots, archive.org snapshots, and MX records preserved as exhibits',
@@ -117,7 +117,7 @@ export const PATTERNS: PatternDefinition[] = [
     name: 'Typosquatting',
     headline: 'One letter off,',
     headlineEm: 'same outcome.',
-    lede: 'Typosquatting is the most common UDRP fact pattern in 2025 - and the most reliably won. Single-character substitution, prefix/suffix typos, homoglyph attacks fall to UDRP panels with predictable consistency.',
+    lede: 'Typosquatting is one of the most common UDRP fact patterns - and one of the most reliably won by complainants. Single-character substitution, prefix/suffix typos, homoglyph attacks fall to UDRP panels with predictable consistency.',
     metaTitle: 'Typosquatting UDRP - How to File a Complaint Yourself',
     metaDescription: 'Recover a typosquatted domain via UDRP. Real 2024-2026 cases. Pass/fail checklist. Self-representation guide.',
     keywords: [
@@ -144,7 +144,7 @@ export const PATTERNS: PatternDefinition[] = [
     passChecklist: [
       'Your trademark was registered before the disputed domain registration date',
       'The disputed domain incorporates the dominant element of your mark with no independent meaning',
-      'The respondents website shows PPC parking, redirect, phishing, or sale listing',
+      'The respondent’s website shows PPC parking, redirect, phishing, or sale listing',
       'You have not previously offered to purchase the domain',
       'The respondent is not commonly known by the disputed string',
       'You have evidence preserved (screenshots, MX records, archive.org snapshots)',
@@ -222,7 +222,7 @@ export const PATTERNS: PatternDefinition[] = [
       },
       {
         question: 'How fast can a phishing UDRP be resolved?',
-        answer: 'WIPOs expedited service can resolve a single-domain UDRP in roughly 30 days for $4,000. Many registrars suspend within hours of credible evidence.',
+        answer: 'WIPO’s expedited service can resolve a single-domain UDRP in roughly 30 days for $4,000. Many registrars suspend within hours of credible evidence.',
       },
       COMMON_FAQ_BUDGET,
       COMMON_FAQ_SELF_REP,
@@ -233,7 +233,7 @@ export const PATTERNS: PatternDefinition[] = [
     slug: 'celebrity',
     name: 'Celebrity & Personal Name',
     headline: 'Common-law rights in',
-    headlineEm: 'a persons name.',
+    headlineEm: 'a person’s name.',
     lede: 'Personal names without registered trademarks can still ground UDRP rights - but only on proof of acquired distinctiveness in commerce.',
     metaTitle: 'Celebrity Name UDRP - Recover a Domain Using Your Name',
     metaDescription: 'How to recover a domain using a personal name. Real cases including Madonna, Snoop Dogg, the foundational Sting denial.',
@@ -253,19 +253,19 @@ export const PATTERNS: PatternDefinition[] = [
       paragraphs: [
         '**Element 1 - Standing.** The threshold question is whether the personal name has acquired secondary meaning in commerce sufficient to function as a trademark.',
         '**Element 2 - Legitimate interests.** Personal names that are also dictionary words, surnames, or political identifiers face uphill battles when respondent shows independent legitimate use.',
-        '**Element 3 - Bad faith.** Established when the registrant clearly targeted the celebritys persona rather than the underlying word.',
+        '**Element 3 - Bad faith.** Established when the registrant clearly targeted the celebrity’s persona rather than the underlying word.',
       ],
     },
     passChecklist: [
       'Your name has registered trademark protection in at least one jurisdiction',
       'You have documented commercial use of your name (merchandise, licensing, sustained press)',
       'The disputed domain targets your persona rather than a coincidental dictionary word',
-      'The respondents use shows targeting',
+      'The respondent’s use shows targeting',
     ],
     failChecklist: [
       'Your name is a common dictionary word with independent meaning',
-      'You dont have documented commercial use of your name as a brand',
-      'The respondents use is non-commercial and not targeting',
+      'You don’t have documented commercial use of your name as a brand',
+      'The respondent’s use is non-commercial and not targeting',
       'Your fame is purely non-commercial',
     ],
     faqs: [
@@ -274,8 +274,8 @@ export const PATTERNS: PatternDefinition[] = [
         answer: 'Sting v. Urvan (D2000-0596) established that famous performers using dictionary-word stage names cannot automatically claim the matching domain.',
       },
       {
-        question: 'Im a creator/influencer, not a "celebrity" - does this still apply?',
-        answer: 'Yes. The Cooper / Call Her Daddy decision (D2025-2944) confirmed that modern creator-economy figures with documented commercial use can establish the same common-law rights.',
+        question: 'I’m a creator/influencer, not a "celebrity" - does this still apply?',
+        answer: 'Often, yes. Panels accept unregistered rights in a personal name when it is used as a distinctive identifier of commercial goods or services, so creators with documented commercial use can qualify. Evidence of revenue, sponsorships and audience reach matters.',
       },
       COMMON_FAQ_BUDGET,
       COMMON_FAQ_SELF_REP,
@@ -299,13 +299,13 @@ export const PATTERNS: PatternDefinition[] = [
     eyebrowSuffix: 'AI & the .AI ccTLD',
     whatIsIt: [
       'The .AI ccTLD (administered by NIC.AI in Anguilla) adopted UDRP via WIPO and has become the fastest-growing dispute frontier.',
-      'Recent doctrine: the TLD itself can "tip the balance" in finding bad-faith targeting when the .AI suffix forms part of the complainants mark.',
+      'Recent doctrine: the TLD itself can "tip the balance" in finding bad-faith targeting when the .AI suffix forms part of the complainant’s mark.',
     ],
     doctrine: {
       title: 'How panels analyze .AI cases',
       paragraphs: [
-        '**The TLD-as-mark-element doctrine.** When complainants trademark itself includes "AI" as a meaningful component, panels increasingly treat the choice of .AI TLD as evidence of targeting.',
-        '**Knowledge vs. targeting.** The barracudaai.com line of cases established that mere knowledge of the complainants existence is not enough.',
+        '**The TLD-as-mark-element doctrine.** When complainant’s trademark itself includes "AI" as a meaningful component, panels increasingly treat the choice of .AI TLD as evidence of targeting.',
+        '**Knowledge vs. targeting.** The barracudaai.com line of cases established that mere knowledge of the complainant’s existence is not enough.',
         '**Lapsed renewal.** The SAP.AI case (DAI2024-0053) confirms that letting a domain lapse does not extinguish trademark rights against later acquirers.',
       ],
     },
@@ -318,7 +318,7 @@ export const PATTERNS: PatternDefinition[] = [
     failChecklist: [
       'Your rights are "nascent" - recent corporate formation, marketing rollout, or trademark filing',
       'The respondent has documented independent use as an AI product/service',
-      'The respondents knowledge of you cannot be elevated to targeting evidence',
+      'The respondent’s knowledge of you cannot be elevated to targeting evidence',
       'You acquired the trademark after the domain registration',
     ],
     faqs: [
@@ -354,7 +354,7 @@ export const PATTERNS: PatternDefinition[] = [
       title: 'How panels analyze generic-word cases',
       paragraphs: [
         '**The Sting precedent (D2000-0596).** Foundational case. Sting was denied transfer of sting.com because "sting" is a dictionary word.',
-        '**The Reliance Wood case (D2025-1615).** Even mega-brand complainants cannot defeat 15+ years of bona fide independent use of a generic word.',
+        '**Long, independent use.** Panels regularly deny complaints where a respondent has used a dictionary-word domain for its ordinary meaning for many years, however large the complainant.',
         '**Booking.com doctrine extended.** Registration of the compound does not confer exclusive rights to the underlying generic component.',
       ],
     },
@@ -367,7 +367,7 @@ export const PATTERNS: PatternDefinition[] = [
     failChecklist: [
       'Your trademark is purely descriptive of the goods/services',
       'The respondent has documented independent use of the dictionary meaning',
-      'The respondents domain registration predates your trademark rights',
+      'The respondent’s domain registration predates your trademark rights',
       'The respondent operates an unrelated legitimate business',
     ],
     faqs: [
@@ -410,13 +410,13 @@ export const PATTERNS: PatternDefinition[] = [
     },
     passChecklist: [
       'Your trademark predates the disputed domain registration',
-      'The respondents use targets your specific industry',
+      'The respondent’s use targets your specific industry',
       'You have direct evidence of bad-faith conduct toward you specifically',
       'The acronym is highly distinctive in your industry context',
     ],
     failChecklist: [
       'The domain registration predates your existence',
-      'Youve made a purchase offer that was refused',
+      'You’ve made a purchase offer that was refused',
       'The acronym maps to many other possible companies',
       'The respondent is a documented domain investor with a portfolio',
       'Your trademark is still pending',
@@ -440,7 +440,7 @@ export const PATTERNS: PatternDefinition[] = [
     name: 'Reverse Domain Name Hijacking',
     headline: 'When the trademark owner',
     headlineEm: 'becomes the bad actor.',
-    lede: 'RDNH findings rose 83% from 2022 to 2025 - 47 to 86 in three years. The pattern is consistent: failed purchase negotiation followed by retaliatory UDRP.',
+    lede: 'RDNH findings at WIPO and Forum rose from 47 in 2022 to 86 in 2025, according to UDRP.tools data reported by Domain Name Wire. A common pattern: a failed purchase negotiation followed by a UDRP filed as a "Plan B".',
     metaTitle: 'Reverse Domain Name Hijacking (RDNH) - When UDRP Backfires',
     metaDescription: 'RDNH defense and the patterns that trigger it. 86 RDNH findings in 2025. How to defend, when to file.',
     keywords: [
@@ -459,20 +459,20 @@ export const PATTERNS: PatternDefinition[] = [
     doctrine: {
       title: 'The most reliable RDNH triggers',
       paragraphs: [
-        '**Plan-B abuse.** Failed purchase negotiation followed by UDRP. The SNSG case is the textbook 2025 example: $60K offer refused, UDRP filed, RDNH issued.',
-        '**Chronological barrier.** Domain registration predates trademark rights. Cannot be bad faith if the trademark didnt exist when the domain was registered.',
+        '**Plan-B abuse.** A complainant tries to buy the domain, is refused, and then files a UDRP it cannot win on the facts. Panels frequently treat this sequence as evidence of bad faith.',
+        '**Chronological barrier.** Domain registration predates trademark rights. Cannot be bad faith if the trademark didn’t exist when the domain was registered.',
         '**Pending trademark applications.** WIPO Overview 3.0 section 1.1: pending applications do not ground UDRP rights.',
         '**Represented counsel higher standard.** Reckless filings by counsel trigger RDNH more readily than pro se filings.',
       ],
     },
     passChecklist: [
-      'You can document that your domain registration predates the complainants trademark rights',
+      'You can document that your domain registration predates the complainant’s trademark rights',
       'You have records of any prior purchase negotiation',
       'You have documented legitimate use',
-      'You can show the complainants rights are thin or pending',
+      'You can show the complainant’s rights are thin or pending',
     ],
     failChecklist: [
-      'You acquired the domain after the complainants clear trademark rights',
+      'You acquired the domain after the complainant’s clear trademark rights',
       'You have used the domain to target the complainant specifically',
       'You have multiple typosquats of well-known marks in your portfolio',
     ],
@@ -482,7 +482,7 @@ export const PATTERNS: PatternDefinition[] = [
         answer: 'No. RDNH evidence is highly useful in subsequent ACPA federal court litigation, where statutory damages are available.',
       },
       {
-        question: 'Im a respondent - should I respond, or default and try for RDNH?',
+        question: 'I’m a respondent - should I respond, or default and try for RDNH?',
         answer: 'Respond. Even modern RDNH findings against defaulted respondents require strong factual records.',
       },
       {
@@ -530,9 +530,9 @@ export const PATTERNS: PatternDefinition[] = [
       'You have identified 3-5 recent cases with similar fact patterns',
     ],
     failChecklist: [
-      'You havent read the actual UDRP Policy text',
-      'Youre relying on second-hand summaries of doctrine',
-      'You havent reviewed cases from the past 12 months',
+      'You haven’t read the actual UDRP Policy text',
+      'You’re relying on second-hand summaries of doctrine',
+      'You haven’t reviewed cases from the past 12 months',
     ],
     faqs: [
       {
@@ -560,8 +560,8 @@ export const PATTERNS: PatternDefinition[] = [
     number: '10',
     eyebrowSuffix: 'URS - Uniform Rapid Suspension',
     whatIsIt: [
-      'URS was created in 2013 alongside the new gTLD program. It applies only to new gTLDs.',
-      'URS is faster ($375 vs $1,500) and quicker (~17 days vs ~60), but the remedy is narrower (suspension only, no transfer) and the burden is higher (clear and convincing evidence).',
+      'URS was created in 2013 alongside the new gTLD program. It applies to new gTLDs and to several legacy TLDs, such as .org, .info and .biz, but not .com or .net.',
+      'URS is cheaper ($375 vs $1,500) and quicker (~17 days vs ~60), but the remedy is narrower (suspension only, no transfer) and the burden is higher (clear and convincing evidence).',
     ],
     doctrine: {
       title: 'When URS makes sense',
@@ -572,22 +572,22 @@ export const PATTERNS: PatternDefinition[] = [
       ],
     },
     passChecklist: [
-      'The disputed domain is in a new gTLD',
+      'The disputed domain is in a new gTLD or another URS-covered TLD',
       'The case is clear-cut cybersquatting',
       'You can meet "clear and convincing evidence"',
       'You only need suspension, not transfer',
       'The domain is being actively used',
     ],
     failChecklist: [
-      'The domain is a .com or other legacy gTLD',
+      'The domain is a .com or .net (not covered by the URS)',
       'The case has factual complexity',
       'You need transfer rather than suspension',
       'The domain is short (3-letter URS cases have been rejected for ambiguity)',
     ],
     faqs: [
       {
-        question: 'Whats the difference between URS and UDRP?',
-        answer: 'URS: $375, ~17 days, suspension only, "clear and convincing evidence", new gTLDs only. UDRP: $1,500+, ~60 days, transfer, "preponderance of evidence", all gTLDs.',
+        question: 'What’s the difference between URS and UDRP?',
+        answer: 'URS: $375, ~17 days, suspension only, "clear and convincing evidence", new gTLDs and some legacy TLDs (not .com/.net). UDRP: $1,500+, ~60 days, transfer, "preponderance of evidence", all gTLDs.',
       },
       {
         question: 'Can I file both URS and UDRP for the same domain?',
@@ -627,22 +627,22 @@ export const PATTERNS: PatternDefinition[] = [
     passChecklist: [
       'You have identified whether your ccTLD adopts UDRP or runs an independent system',
       'Your trademark is registered in the relevant national jurisdiction',
-      'You have evidence consistent with the ccTLDs local supplemental rules',
+      'You have evidence consistent with the ccTLD’s local supplemental rules',
       'You can file in the language of the registration agreement',
     ],
     failChecklist: [
       'The ccTLD runs an independent court-based system requiring local litigation',
       'Your trademark is not registered in the relevant jurisdiction',
-      'The local rules require evidence you dont have',
+      'The local rules require evidence you don’t have',
     ],
     faqs: [
       {
         question: 'Does UDRP apply to .UK domains?',
-        answer: 'No. .UK uses Nominets Dispute Resolution Service (DRS), which is a separate procedure with different criteria.',
+        answer: 'No. .UK uses Nominet’s Dispute Resolution Service (DRS), which is a separate procedure with different criteria.',
       },
       {
         question: 'My trademark is in the US but the ccTLD is .DE - what now?',
-        answer: 'Germanys .DE does not have a UDRP-equivalent procedure. Disputes go to civil court in Germany.',
+        answer: 'Germany’s .DE does not have a UDRP-equivalent procedure. Disputes go to civil court in Germany.',
       },
       COMMON_FAQ_TIMELINE,
       COMMON_FAQ_SELF_REP,
@@ -654,9 +654,9 @@ export const PATTERNS: PatternDefinition[] = [
     name: 'Aged Domains & Predating Rights',
     headline: 'The chronological',
     headlineEm: 'barrier.',
-    lede: 'If the domain was registered before the complainants trademark rights existed, registration cannot be in bad faith. Period. The single most reliable defense in UDRP.',
+    lede: 'If the domain was registered before the complainant’s trademark rights existed, registration cannot be in bad faith. Period. The single most reliable defense in UDRP.',
     metaTitle: 'Aged Domain UDRP Defense - The Chronological Barrier',
-    metaDescription: 'How to defend a UDRP when your domain registration predates the complainants trademark. Real cases: Munchies, Rocketship, Zember.',
+    metaDescription: 'How to defend a UDRP when your domain registration predates the complainant’s trademark. When the chronological barrier applies and how panels treat aged and re-acquired domains.',
     keywords: [
       { term: 'aged domain UDRP defense', volume: 90 },
       { term: 'domain predates trademark', volume: 110 },
@@ -665,36 +665,36 @@ export const PATTERNS: PatternDefinition[] = [
     number: '12',
     eyebrowSuffix: 'Aged Domains & Predating Rights',
     whatIsIt: [
-      'The chronological barrier is UDRPs most absolute defense. Bad faith requires intent to target the complainants mark; if the mark didnt exist when the domain was registered, no such intent is possible.',
-      'The most striking 2024-2025 RDNH cases all involve this defense: Munchies (27-year gap), Rocketship (28-year gap), Zember (12-year gap), SNSG (22-year gap).',
+      'The chronological barrier is UDRP’s most absolute defense. Bad faith requires intent to target the complainant’s mark; if the mark didn’t exist when the domain was registered, no such intent is possible.',
+      'Many recent RDNH findings involve this defense: the domain had been registered for a decade or more before the complainant\'s trademark existed.',
     ],
     doctrine: {
       title: 'The strongest defense in UDRP',
       paragraphs: [
         '**The rule.** Bad faith registration requires actual or constructive knowledge of the trademark.',
         '**The exception.** If the registrant has subsequently transferred the domain to a new acquirer, some panels evaluate bad faith from the date of acquisition.',
-        '**The 2025 RDNH cluster.** Cases like Munchies, Zember, and SNSG all show the same pattern: domain was registered years or decades earlier, panel issues RDNH.',
+        '**Recent pattern.** Where a domain was registered years or decades before the mark and the complainant ignored that fact, panels increasingly issue RDNH findings.',
       ],
     },
     passChecklist: [
       'You can document the original registration date via WHOIS history',
-      'Your registration date predates the complainants trademark filing',
+      'Your registration date predates the complainant’s trademark filing',
       'You have evidence of continuous independent ownership',
       'You have any business records showing legitimate use during the intervening period',
     ],
     failChecklist: [
       'Your domain has been transferred to a new acquirer post-trademark',
-      'You cant document the original registration date',
+      'You can’t document the original registration date',
       'Your registration was around the same time as the trademark',
     ],
     faqs: [
       {
         question: 'How do I prove my domain registration date?',
-        answer: 'Use WHOIS history tools: DomainTools, Whoisology, ICANNs WhoisHistory archive, or the Wayback Machine.',
+        answer: 'Use WHOIS history tools: DomainTools or Whoisology, together with Wayback Machine captures and your registrar receipt.',
       },
       {
         question: 'What if the trademark dates back further than my domain?',
-        answer: 'Then the chronological barrier doesnt apply. Look at legitimate-interest defenses, dictionary-word defense, lack of targeting evidence.',
+        answer: 'Then the chronological barrier doesn’t apply. Look at legitimate-interest defenses, dictionary-word defense, lack of targeting evidence.',
       },
       {
         question: 'I bought this aged domain at auction - does that affect the chronology?',

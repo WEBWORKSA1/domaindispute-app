@@ -1,97 +1,57 @@
 import Link from 'next/link';
+import { FOOTER_GROUPS, SITE } from '@/lib/site';
+import { EmailSignup } from '@/components/email-signup';
+import { Logo } from '@/components/logo';
 
 export function SiteFooter() {
+  const year = new Date().getFullYear();
   return (
-    <footer className="bg-ink text-bone px-8 pt-20 pb-8">
-      <div className="max-w-[1320px] mx-auto">
-        <div className="grid grid-cols-1 md:grid-cols-[1.4fr_1fr_1fr_1fr] gap-10 pb-12 border-b border-bone-2">
-          <div>
-            <Link href="/" className="flex items-baseline gap-3 text-bone no-underline mb-4">
-              <span className="font-serif font-black text-2xl tracking-tight">
-                DomainDispute<span className="text-gold-bright">.</span>
-              </span>
-            </Link>
-            <p className="text-sm text-bone-2 max-w-sm leading-relaxed">
-              Self-help research and document-preparation platform for UDRP, URS, ACPA, and ccTLD
-              dispute self-representation. Not a law firm. Built around the codified right of pro se
-              representation.
-            </p>
+    <footer className="mt-auto bg-ink text-white">
+      <div className="wrap grid gap-10 border-b border-white/10 py-12 lg:grid-cols-[1.1fr_2fr]">
+        <div>
+          <Link href="/" className="flex items-center gap-2.5">
+            <Logo className="h-8 w-8" />
+            <span className="font-serif text-xl font-bold">DomainDispute.com</span>
+          </Link>
+          <p className="mt-4 max-w-sm text-[15px] leading-relaxed text-white/75">
+            Free research and guidance for anyone filing or answering a domain name dispute. Updated automatically every day from public provider records.
+          </p>
+          <div className="mt-6 max-w-sm">
+            <p className="mb-2 text-sm font-semibold">Get the daily brief</p>
+            <EmailSignup variant="dark" compact />
           </div>
-
-          <FooterCol title="Procedures">
-            <FooterLink href="/procedures/udrp">UDRP Filing</FooterLink>
-            <FooterLink href="/procedures/urs">URS Proceedings</FooterLink>
-            <FooterLink href="/procedures/acpa">ACPA Litigation</FooterLink>
-            <FooterLink href="/procedures/rdnh-defense">RDNH Defense</FooterLink>
-            <FooterLink href="/procedures/cctld">ccTLD Disputes</FooterLink>
-          </FooterCol>
-
-          <FooterCol title="Resources">
-            <FooterLink href="/resources/self-representation-guide">Self-Representation Guide</FooterLink>
-            <FooterLink href="/cases">Case Library</FooterLink>
-            <FooterLink href="/live">Live Feed</FooterLink>
-            <FooterLink href="/three-element-test">Three-Element Test</FooterLink>
-            <FooterLink href="/fees">Provider Fees</FooterLink>
-            <FooterLink href="/faq">FAQ</FooterLink>
-            <FooterLink href="https://www.icann.org/resources/pages/policy-2024-02-21-en" external>
-              ICANN UDRP Policy &uarr;
-            </FooterLink>
-          </FooterCol>
-
-          <FooterCol title="Account">
-            <FooterLink href="/start">Free Pre-Check</FooterLink>
-            <FooterLink href="/dashboard">Dashboard</FooterLink>
-            <FooterLink href="mailto:hello@domaindispute.com">hello@domaindispute.com</FooterLink>
-            <FooterLink href="/legal/terms">Terms</FooterLink>
-            <FooterLink href="/legal/privacy">Privacy</FooterLink>
-          </FooterCol>
         </div>
 
-        <div className="mt-8 flex flex-col md:flex-row justify-between gap-5 text-xs text-bone-2">
-          <span>&copy; 2026 DomainDispute.com &middot; Self-help platform for domain dispute self-representation.</span>
-          <span className="italic max-w-3xl leading-relaxed">
-            DomainDispute.com is a self-help research and document-preparation platform - not a law firm.
-            UDRP Rules section 4(b), URS Procedure section 1.2.6, and the supplemental rules of every ICANN-approved provider
-            expressly permit self-representation. We do not provide legal advice, do not establish an
-            attorney-client relationship, and do not file or submit documents on your behalf. You are solely
-            responsible for the accuracy of facts you submit, for reviewing every document we prepare, and for
-            the legal consequences of any filing.
-          </span>
+        <div className="grid grid-cols-2 gap-8 sm:grid-cols-3 lg:grid-cols-5">
+          {FOOTER_GROUPS.map((group) => (
+            <div key={group.title}>
+              <h2 className="mb-3 text-sm font-semibold text-white">{group.title}</h2>
+              <ul className="space-y-2">
+                {group.links.map((l) => (
+                  <li key={l.href}>
+                    <Link href={l.href} className="text-[14px] text-white/70 hover:text-white">
+                      {l.label}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
         </div>
       </div>
+
+      <div className="wrap space-y-3 py-8 text-[13px] leading-relaxed text-white/60">
+        <p>
+          <strong className="text-white/85">Not a law firm.</strong> DomainDispute.com provides general legal information, public case data and self-help tools. Nothing on this site is legal advice, and using it does not create an attorney-client relationship. For advice on your situation, consult a qualified lawyer.
+        </p>
+        <p>
+          &copy; {SITE.foundedYear === year ? year : `${SITE.foundedYear}-${year}`} DomainDispute.com. All rights reserved. &ldquo;DomainDispute&rdquo; and the DomainDispute.com name and logo are trademarks of their owner. WIPO, ICANN, Forum, UDRP and other names are trademarks of their respective owners, used here only to identify them; no affiliation or endorsement is implied. Case records are drawn from public provider databases. See{' '}
+          <Link href="/legal/copyright" className="underline hover:text-white">
+            trademark &amp; copyright
+          </Link>
+          .
+        </p>
+      </div>
     </footer>
-  );
-}
-
-function FooterCol({ title, children }: { title: string; children: React.ReactNode }) {
-  return (
-    <div>
-      <h4 className="font-mono text-[10px] tracking-[0.22em] uppercase text-gold-bright mb-5 font-medium">
-        {title}
-      </h4>
-      <ul className="space-y-2.5">{children}</ul>
-    </div>
-  );
-}
-
-function FooterLink({
-  href,
-  children,
-  external = false,
-}: {
-  href: string;
-  children: React.ReactNode;
-  external?: boolean;
-}) {
-  return (
-    <li>
-      <Link
-        href={href}
-        className="text-bone-2 text-sm hover:text-bone no-underline"
-        {...(external ? { target: '_blank', rel: 'noopener' } : {})}
-      >
-        {children}
-      </Link>
-    </li>
   );
 }

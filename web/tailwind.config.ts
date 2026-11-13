@@ -1,59 +1,66 @@
 import type { Config } from 'tailwindcss';
 
+/**
+ * Design tokens - "docket & registry".
+ * Token names are kept from v1 so every existing page re-skins consistently:
+ *   ink      = registry navy (text, dark bands)
+ *   paper    = page surface
+ *   bone     = quiet panel surface
+ *   oxblood  = docket-seal red (primary action, filing stamp) - used sparingly
+ *   gold     = registry teal (links, data accents)
+ */
 const config: Config = {
-  content: [
-    './app/**/*.{ts,tsx}',
-    './components/**/*.{ts,tsx}',
-  ],
+  content: ['./app/**/*.{ts,tsx}', './components/**/*.{ts,tsx}', './lib/**/*.{ts,tsx}'],
   theme: {
     extend: {
       colors: {
         ink: {
-          DEFAULT: '#1a1410',
-          soft: '#2d2520',
+          DEFAULT: '#12233b',
+          soft: '#2c3e57',
         },
         bone: {
-          DEFAULT: '#f4eee2',
-          2: '#ebe2ce',
+          DEFAULT: '#eef2f6',
+          2: '#d9e1ea',
         },
-        paper: '#fbf7ee',
+        paper: '#ffffff',
         oxblood: {
-          DEFAULT: '#6b1a1a',
-          deep: '#4a0f0f',
-          light: '#a82e2e',
+          DEFAULT: '#b42318',
+          deep: '#8f1b12',
+          light: '#d9483b',
         },
         gold: {
-          DEFAULT: '#a87a3c',
-          bright: '#d4a13c',
+          DEFAULT: '#1f6f8b',
+          bright: '#6cc1dc',
         },
-        'legal-pad': '#fff8c5',
+        'legal-pad': '#fff6d5',
         muted: {
-          DEFAULT: '#6b5e52',
-          2: '#8a7d6f',
+          DEFAULT: '#556477',
+          2: '#7b8a9c',
         },
         green: {
-          DEFAULT: '#2d4a2b',
-          bright: '#5fbf60',
+          DEFAULT: '#1d6b40',
+          bright: '#3fa66b',
         },
-        amber: '#e3b85f',
-        red: '#e07b6a',
+        amber: '#b7791f',
+        red: '#c4372b',
       },
       fontFamily: {
-        serif: ['Fraunces', 'Georgia', 'serif'],
-        sans: ['Inter Tight', 'system-ui', 'sans-serif'],
-        mono: ['JetBrains Mono', 'ui-monospace', 'monospace'],
+        serif: ['"Source Serif 4"', 'Georgia', 'serif'],
+        sans: ['"Public Sans"', 'system-ui', 'sans-serif'],
+        mono: ['"IBM Plex Mono"', 'ui-monospace', 'monospace'],
       },
       fontSize: {
-        'display-xl': ['clamp(48px, 7vw, 108px)', { lineHeight: '0.93', letterSpacing: '-0.03em' }],
-        'display-lg': ['clamp(44px, 6.2vw, 82px)', { lineHeight: '0.97', letterSpacing: '-0.025em' }],
-        'display-md': ['clamp(36px, 4.5vw, 58px)', { lineHeight: '1', letterSpacing: '-0.02em' }],
-        'display-sm': ['clamp(32px, 4.2vw, 48px)', { lineHeight: '1.05', letterSpacing: '-0.015em' }],
+        'display-xl': ['clamp(42px, 6vw, 84px)', { lineHeight: '1', letterSpacing: '-0.02em' }],
+        'display-lg': ['clamp(36px, 5vw, 64px)', { lineHeight: '1.04', letterSpacing: '-0.018em' }],
+        'display-md': ['clamp(30px, 3.6vw, 46px)', { lineHeight: '1.08', letterSpacing: '-0.012em' }],
+        'display-sm': ['clamp(26px, 3vw, 36px)', { lineHeight: '1.12', letterSpacing: '-0.01em' }],
+      },
+      maxWidth: {
+        site: '1200px',
+        prose: '68ch',
       },
       animation: {
-        'pulse-slow': 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
-      },
-      backgroundImage: {
-        'legal-rules': 'repeating-linear-gradient(0deg, transparent 0, transparent 31px, rgba(168, 122, 60, 0.07) 31px, rgba(168, 122, 60, 0.07) 32px)',
+        'pulse-slow': 'pulse 2.4s cubic-bezier(0.4, 0, 0.6, 1) infinite',
       },
     },
   },

@@ -1,16 +1,16 @@
 /**
- * Shared utility helpers used across components.
+ * Shared helpers.
  */
 
 import { type ClassValue, clsx } from 'clsx';
-import { format, formatDistanceToNow, parseISO } from 'date-fns';
+import { addDays, format, formatDistanceToNow, parseISO } from 'date-fns';
 import { twMerge } from 'tailwind-merge';
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
-export function formatDate(iso: string | null, fmt = 'MMMM d, yyyy'): string {
+export function formatDate(iso: string | null | undefined, fmt = 'MMM d, yyyy'): string {
   if (!iso) return '-';
   try {
     return format(parseISO(iso), fmt);
@@ -19,7 +19,7 @@ export function formatDate(iso: string | null, fmt = 'MMMM d, yyyy'): string {
   }
 }
 
-export function timeAgo(iso: string | null): string {
+export function timeAgo(iso: string | null | undefined): string {
   if (!iso) return '-';
   try {
     return formatDistanceToNow(parseISO(iso), { addSuffix: true });
@@ -28,49 +28,80 @@ export function timeAgo(iso: string | null): string {
   }
 }
 
-export function outcomeLabel(outcome: string | null): string {
+export function addDaysIso(iso: string, days: number): string {
+  return format(addDays(parseISO(iso), days), 'yyyy-MM-dd');
+}
+
+export function outcomeLabel(outcome: string | null | undefined): string {
   if (!outcome) return 'Pending';
   const map: Record<string, string> = {
-    TRANSFER: 'Transfer',
-    DENY: 'Denied',
-    RDNH: 'RDNH',
+    TRANSFER: 'Transferred',
+    DENY: 'Complaint denied',
+    RDNH: 'Denied (RDNH)',
     SUSPEND: 'Suspended',
-    WITHDRAWN: 'Withdrawn',
+    WITHDRAWN: 'Terminated',
     PENDING: 'Pending',
-    OTHER: 'Other',
+    OTHER: 'Cancelled',
+    FILED: 'Filed',
+    DECIDED: 'Closed',
   };
   return map[outcome] ?? outcome;
 }
 
-export function outcomeColor(outcome: string | null): string {
+/** Badge classes. Colour is never the only signal - the label always shows. */
+export function outcomeColor(outcome: string | null | undefined): string {
   switch (outcome) {
     case 'TRANSFER':
-      return 'bg-green text-bone';
-    case 'DENY':
-      return 'bg-gold text-ink';
-    case 'RDNH':
-      return 'bg-oxblood text-bone';
+      return 'bg-[#e3eefb] text-[#174a8a]';
+    case 'OTHER':
     case 'SUSPEND':
-      return 'bg-ink text-bone';
+      return 'bg-[#e6f4ee] text-[#155c3c]';
+    case 'DENY':
+      return 'bg-[#fdebe4] text-[#9a3412]';
+    case 'RDNH':
+      return 'bg-oxblood text-white';
+    case 'WITHDRAWN':
+    case 'DECIDED':
+      return 'bg-bone text-muted';
     default:
-      return 'bg-muted text-bone';
+      return 'bg-legal-pad text-[#7a5410]';
   }
 }
 
 export function clusterLabel(tag: string): string {
   const map: Record<string, string> = {
-    'typosquatting': 'Typosquatting',
-    'famous-brand': 'Famous Brand',
-    'phishing': 'Phishing & Fraud',
-    'celebrity': 'Celebrity',
-    'ai-cctld': 'AI / .AI',
-    'generic-word': 'Generic Word',
-    'acronym': 'Acronym / Short',
-    'rdnh': 'RDNH',
-    'foundational': 'Foundational',
-    'urs': 'URS',
-    'cctld': 'ccTLD',
-    'aged-domain': 'Aged Domain',
+    typosquatting: 'Typosquatting',
+    'famous-brand': 'Famous brand',
+    phishing: 'Phishing & fraud',
+    celebrity: 'Celebrity',
+    'ai-cctld': 'AI / .ai',
+    'generic-word': 'Generic word',
+    acronym: 'Acronym / short',
+    rdnh: 'RDNH',
+    foundational: 'Foundational',
+    urs: 'URS',
+    cctld: 'ccTLD',
+    'aged-domain': 'Aged domain',
   };
   return map[tag] ?? tag;
+}
+
+export function slugify(s: string): string {
+  return s
+    .toLowerCase()
+    .normalize('NFKD')
+    .replace(/[^\w\s-]/g, '')
+    .trim()
+    .replace(/[\s_-]+/g, '-')
+    .slice(0, 80);
+}
+
+export function pct(n: number | null | undefined, digits = 0): string {
+  if (n === null || n === undefined || Number.isNaN(n)) return '-';
+  return `${(n * 100).toFixed(digits)}%`;
+}
+
+export function num(n: number | null | undefined): string {
+  if (n === null || n === undefined) return '-';
+  return n.toLocaleString('en-US');
 }
