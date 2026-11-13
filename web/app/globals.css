@@ -1,5 +1,3 @@
-@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght,SOFT@9..144,300;9..144,400;9..144,500;9..144,600;9..144,700;9..144,800;9..144,900&family=JetBrains+Mono:wght@400;500;600&family=Inter+Tight:wght@300;400;500;600;700&display=swap');
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -11,49 +9,147 @@
 
   html {
     @apply scroll-smooth;
+    -webkit-text-size-adjust: 100%;
   }
 
   body {
     @apply bg-paper text-ink font-sans antialiased;
+    font-feature-settings: 'tnum' 0;
   }
 
   ::selection {
-    @apply bg-oxblood text-bone;
+    @apply bg-gold text-paper;
   }
 
   :focus-visible {
-    @apply outline-2 outline-offset-2 outline-oxblood;
+    outline: 2px solid #1f6f8b;
+    outline-offset: 2px;
+  }
+
+  a {
+    text-underline-offset: 3px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
   }
 }
 
 @layer components {
-  .h-display {
-    font-family: 'Fraunces', Georgia, serif;
-    font-variation-settings: 'opsz' 144, 'SOFT' 30;
-    @apply font-light tracking-tight;
+  .wrap {
+    @apply mx-auto w-full max-w-site px-4 sm:px-6 lg:px-8;
   }
 
+  .h-display {
+    font-family: 'Source Serif 4', Georgia, serif;
+    @apply font-semibold tracking-tight;
+  }
+
+  /* v1 pages used <em> as a colour accent; keep it as plain italic. */
   .h-display em {
     font-style: italic;
-    @apply text-oxblood font-medium;
-    font-variation-settings: 'opsz' 144, 'SOFT' 80;
+    font-weight: inherit;
   }
 
   .eyebrow {
-    @apply font-mono text-xs uppercase tracking-[0.22em] text-oxblood inline-flex items-center gap-2.5;
+    @apply text-sm font-semibold text-gold;
   }
 
-  .bg-rules {
-    background-image: repeating-linear-gradient(
-      0deg,
-      transparent 0,
-      transparent 31px,
-      rgba(168, 122, 60, 0.07) 31px,
-      rgba(168, 122, 60, 0.07) 32px
-    );
+  .docket-no {
+    @apply font-mono tabular-nums tracking-tight;
   }
 
   .pill {
-    @apply font-mono text-[10px] uppercase tracking-wider px-2 py-0.5 inline-flex items-center;
+    @apply inline-flex items-center rounded px-2 py-0.5 text-xs font-semibold;
+  }
+
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-md px-5 py-3 text-[15px] font-semibold transition-colors;
+  }
+  .btn-primary {
+    @apply btn bg-oxblood text-white hover:bg-oxblood-deep;
+  }
+  .btn-dark {
+    @apply btn bg-ink text-white hover:bg-ink-soft;
+  }
+  .btn-outline {
+    @apply btn border border-ink/25 bg-paper text-ink hover:border-ink;
+  }
+  .btn-light {
+    @apply btn bg-white text-ink hover:bg-bone;
+  }
+
+  .field {
+    @apply block w-full rounded-md border border-ink/20 bg-paper px-3.5 py-2.5 text-[15px] text-ink placeholder:text-muted-2 focus:border-gold focus:outline-none focus:ring-2 focus:ring-gold/25;
+  }
+  .field-label {
+    @apply mb-1.5 block text-sm font-semibold text-ink;
+  }
+
+  .panel {
+    @apply rounded-lg border border-bone-2 bg-paper;
+  }
+
+  .link {
+    @apply font-medium text-gold underline decoration-gold/30 hover:decoration-gold;
+  }
+
+  /* Long-form article typography */
+  .prose-dd {
+    @apply max-w-prose text-[17px] leading-[1.7] text-ink-soft;
+  }
+  .prose-dd h2 {
+    @apply mt-12 mb-4 font-serif text-[28px] font-semibold leading-tight text-ink;
+  }
+  .prose-dd h3 {
+    @apply mt-8 mb-3 font-serif text-[21px] font-semibold leading-snug text-ink;
+  }
+  .prose-dd p {
+    @apply mb-5;
+  }
+  .prose-dd ul {
+    @apply mb-5 list-disc space-y-2 pl-6;
+  }
+  .prose-dd ol {
+    @apply mb-5 list-decimal space-y-2 pl-6;
+  }
+  .prose-dd a {
+    @apply link;
+  }
+  .prose-dd strong {
+    @apply font-semibold text-ink;
+  }
+  .prose-dd blockquote {
+    @apply my-6 border-l-4 border-gold bg-bone px-5 py-4 italic text-ink;
+  }
+  .prose-dd table {
+    @apply mb-6 w-full border-collapse text-[15px];
+  }
+  .prose-dd th {
+    @apply border-b-2 border-ink py-2 pr-4 text-left font-semibold text-ink;
+  }
+  .prose-dd td {
+    @apply border-b border-bone-2 py-2 pr-4 align-top;
+  }
+
+  .bg-rules {
+    background-image: linear-gradient(to bottom, rgba(18, 35, 59, 0.045) 1px, transparent 1px);
+    background-size: 100% 36px;
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+  .scrollbar-none {
+    scrollbar-width: none;
   }
 }
