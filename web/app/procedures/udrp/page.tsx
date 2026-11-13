@@ -40,7 +40,7 @@ export default function UDRPPage() {
 
         <section>
           <h2 className="font-serif text-[26px] mb-4">Self-representation</h2>
-          <p className="text-muted">UDRP Rule 4(b) explicitly permits parties to self-represent. Many filings — both complaints and responses — are submitted pro se. DomainDispute supports self-represented parties with templates, case research, and pattern matching.</p>
+          <p className="text-muted">Representation is optional. The UDRP Rules only ask for details of &ldquo;any representative authorized to act&rdquo; for a party (paragraphs 3(b)(ii) and 5(c)(ii)), and WIPO and Forum publish model complaint and response forms. Many complaints and responses are filed by the parties themselves. DomainDispute.com supports them with case research, guides and free tools.</p>
         </section>
       </div>
 

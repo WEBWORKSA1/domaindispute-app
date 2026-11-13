@@ -6,7 +6,7 @@ export default function SelfRepGuidePage() {
       <span className="font-mono text-[11px] tracking-[0.2em] uppercase text-oxblood">Resources</span>
       <h1 className="font-serif font-black text-[44px] tracking-tight mt-4 mb-6">The Self-Representation Guide</h1>
       <p className="text-lg text-muted mb-12">
-        UDRP Rule 4(b) explicitly permits parties to represent themselves. Many filings &mdash; both complaints and responses &mdash; are submitted pro se every year. Here&apos;s how to do it well.
+        Nothing in the UDRP requires a lawyer: the Rules only ask for details of &ldquo;any representative authorized to act&rdquo; for a party. Many complaints and responses are filed by the parties themselves every year. Here&apos;s how to do it well.
       </p>
 
       <div className="space-y-10">
