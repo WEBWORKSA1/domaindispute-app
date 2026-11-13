@@ -53,12 +53,12 @@ export function runPreCheck(input: PreCheckInput): PreCheckResult {
         verdict: 'WALK_AWAY',
         headline: 'Filing may trigger RDNH against you.',
         summary:
-          'When the domain was registered before your trademark existed, registration cannot be in bad faith. This is the most reliable RDNH trigger in 2025.',
+          'When the domain was registered before your trademark existed, registration cannot be in bad faith. It is one of the most common reasons panels find reverse domain name hijacking.',
         flags: ['Chronological barrier - domain predates trademark', 'High RDNH risk'],
         recommendations: [
           'Do not file UDRP - RDNH risk is high',
           'Consider purchase negotiation instead',
-          'Run the Tier 1 analysis if you want a deeper second opinion',
+          'Request a free case review for a second opinion',
         ],
         similarPattern: 'aged-domain',
       };
@@ -69,11 +69,11 @@ export function runPreCheck(input: PreCheckInput): PreCheckResult {
         verdict: 'WEAK',
         headline: 'Plan-B abuse risk - proceed with caution.',
         summary:
-          'Filing UDRP after a failed purchase negotiation is the most common RDNH pattern of 2025. Panels see this clearly.',
+          'Filing a UDRP after a failed purchase negotiation is a recognised RDNH pattern ("Plan B"). Panels see through it.',
         flags: ['Prior purchase offer made', 'Plan-B abuse pattern'],
         recommendations: [
           'Document why your case is independently strong on the merits',
-          'Run the Tier 1 analysis to identify the strongest framing',
+          'Request a free case review to test your strongest framing',
           'Avoid referencing the purchase negotiation in your complaint',
           'Consider walking away if your underlying merits are thin',
         ],
@@ -88,7 +88,7 @@ export function runPreCheck(input: PreCheckInput): PreCheckResult {
         'Based on these three answers, your case profile is consistent with successful complainant filings. The next step is a deeper analysis.',
       flags: [],
       recommendations: [
-        'Run the Tier 1 Case Analysis to score against UDRP three-element doctrine',
+        'Search the case library for decisions with similar facts',
         'Preserve evidence now: screenshots, WHOIS history, MX records, archive.org snapshots',
         'Identify the right provider (WIPO for most; URS for clear-cut new gTLD typosquats)',
       ],
@@ -106,8 +106,8 @@ export function runPreCheck(input: PreCheckInput): PreCheckResult {
       recommendations: [
         'Do not default - file a response',
         'Document the domain registration date with WHOIS history',
-        'Run the Tier 1 analysis to identify additional defenses',
-        'Consider Tier 2 for prepared response with verified citations',
+        'Request a free case review to identify additional defenses',
+        'Read the guide on responding to a UDRP complaint',
       ],
       similarPattern: 'aged-domain',
     };
@@ -123,8 +123,8 @@ export function runPreCheck(input: PreCheckInput): PreCheckResult {
       recommendations: [
         'Do not default - file a response',
         'Preserve all communications about the purchase offer',
-        'Run the Tier 1 analysis - RDNH defenses benefit from similar-case retrieval',
-        'Consider Tier 2 for prepared response with verified RDNH precedent citations',
+        'Search the case library for RDNH decisions on similar facts',
+        'Ask the panel for an RDNH finding if the complainant ignored your earlier registration',
       ],
       similarPattern: 'rdnh',
     };
@@ -137,7 +137,7 @@ export function runPreCheck(input: PreCheckInput): PreCheckResult {
       'Your situation requires deeper analysis to identify viable defenses. Common defenses include legitimate interest under section 4(c), generic-word use, and lack of targeting evidence.',
     flags: ['No clear chronological barrier'],
     recommendations: [
-      'Run the Tier 1 analysis to identify your strongest defenses',
+      'Request a free case review to identify your strongest defenses',
       'Document business records, registration date, and any independent use',
       'Do not default - even a brief response improves outcomes significantly',
     ],
