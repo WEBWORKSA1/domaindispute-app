@@ -42,6 +42,7 @@ export async function POST(request: NextRequest) {
   if (input.email) {
     try {
       const supabase = createServiceRoleClient();
+      if (!supabase) throw new Error('Supabase not configured');
       await supabase.from('leads').insert({
         email: input.email,
         source: inferLeadSource(input),
