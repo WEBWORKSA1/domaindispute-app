@@ -1,14 +1,19 @@
 """
-Live filings scraper - hourly cadence.
+Live docket scraper (runs hourly from the existing workflow).
 
-Fetches the most recent WIPO cases (newest sequence numbers in current year)
-and records them in the live_filings table for the /live page.
+1. Filed cases - WIPO casesx list (commencement date + status):
+     https://www.wipo.int/amc/en/domains/casesx/list.jsp?prefix=D&year=YYYY&seq_min=N&seq_max=M
+   The newest ranges are upserted into live_filings with status
+     FILED   = compliance review, not yet commenced
+     PENDING = commenced / suspended, awaiting decision
+     DECIDED = decided or terminated
+   Every 6th UTC hour the scan widens to the last 8 ranges so older pending
+   cases are promoted when they close.
 
-If a case has already been promoted to a decision in the cases table, we skip
-inserting a duplicate live_filing row but mark any existing live_filing as
-'DECIDED'.
+2. Fresh decisions - the newest decisionsx ranges for the current year are
+   upserted into `cases`, so outcomes appear within the hour.
 
-Reference: Architecture Sec 04 Track C, Sec 06 Pillar 3.
+python -m scrapers.live.scraper [--ranges 3] [--max N]
 """
 
 from __future__ import annotations
@@ -22,143 +27,196 @@ from rich.console import Console
 
 from scrapers.common import (
     PoliteClient,
+    ScrapedCase,
+    chunk_bounds,
+    map_outcome,
+    parse_wipo_table,
+    seq_of,
     supabase,
     track_run,
+    upsert_cases_batch,
 )
-from scrapers.wipo.scraper import (
-    WIPO_LIST_URL,
-    parse_list_chunk,
-)
+from scrapers.wipo.scraper import WIPO_BASE, WIPO_LIST_URL, last_indexed_seq
 
 console = Console()
 
+CASES_LIST_URL = "https://www.wipo.int/amc/en/domains/casesx/list.jsp?prefix=D&year={year}&seq_min={seq_min}&seq_max={seq_max}"
 
-async def scrape_live_filings(max_filings: int | None = 50) -> None:
-    """
-    Hourly scrape: pull the latest 50 (or max_filings) WIPO cases from the
-    current year by hitting the highest sequence-number chunk first and
-    walking backwards.
-    """
-    current_year = datetime.now(timezone.utc).year
-    target_count = max_filings or 50
+
+def docket_status(status_text: str) -> str:
+    s = status_text.lower()
+    if "decided" in s or "terminat" in s or "closed" in s:
+        return "DECIDED"
+    if "compliance" in s:
+        return "FILED"
+    return "PENDING"
+
+
+def latest_filing_seq(year: int) -> int:
+    res = (
+        supabase()
+        .table("live_filings")
+        .select("case_number")
+        .eq("provider", "WIPO")
+        .like("case_number", f"D{year}-%")
+        .order("case_number", desc=True)
+        .limit(1)
+        .execute()
+    )
+    return seq_of(res.data[0]["case_number"]) if res.data else 0
+
+
+async def find_latest_range(client: PoliteClient, year: int, hint_seq: int) -> int | None:
+    """Return the highest range index that contains cases."""
+    idx = hint_seq // 200 if hint_seq else 30
+    html = await client.get(CASES_LIST_URL.format(year=year, seq_min=chunk_bounds(idx)[0], seq_max=chunk_bounds(idx)[1]))
+    if parse_wipo_table(html, "cases"):
+        # walk up while the next range has cases
+        while idx < 60:
+            lo, hi = chunk_bounds(idx + 1)
+            nxt = await client.get(CASES_LIST_URL.format(year=year, seq_min=lo, seq_max=hi))
+            if not parse_wipo_table(nxt, "cases"):
+                return idx
+            idx += 1
+        return idx
+    # walk down until a range has cases
+    while idx > 0:
+        idx -= 1
+        lo, hi = chunk_bounds(idx)
+        html = await client.get(CASES_LIST_URL.format(year=year, seq_min=lo, seq_max=hi))
+        if parse_wipo_table(html, "cases"):
+            return idx
+    return None
+
+
+def upsert_filings(rows: list[dict[str, Any]]) -> tuple[int, int]:
+    """Batch upsert into live_filings; rows without a date never blank a stored date."""
+    if not rows:
+        return (0, 0)
+    sb = supabase()
+    numbers = [r["case_number"] for r in rows]
+    existing: dict[str, dict[str, Any]] = {}
+    for i in range(0, len(numbers), 200):
+        res = sb.table("live_filings").select("case_number, status, filing_date").in_("case_number", numbers[i : i + 200]).execute()
+        for r in res.data or []:
+            existing[r["case_number"]] = r
+
+    with_date: list[dict[str, Any]] = []
+    without_date: list[dict[str, Any]] = []
+    added = changed = 0
+    for r in rows:
+        prev = existing.get(r["case_number"])
+        if prev is None:
+            added += 1
+        elif prev.get("status") == r["status"] and (not r.get("filing_date") or prev.get("filing_date") == r["filing_date"]):
+            continue
+        else:
+            changed += 1
+        if r.get("filing_date"):
+            with_date.append(r)
+        else:
+            without_date.append({k: v for k, v in r.items() if k != "filing_date"})
+
+    for batch in (with_date, without_date):
+        for i in range(0, len(batch), 200):
+            sb.table("live_filings").upsert(batch[i : i + 200], on_conflict="provider,case_number").execute()
+    return (added, changed)
+
+
+async def scrape_live(ranges: int, max_rows: int | None) -> None:
+    now = datetime.now(timezone.utc)
+    year = now.year
+    if now.hour % 6 == 0:
+        ranges = max(ranges, 8)
 
     async with track_run("wipo_live_filings_hourly") as run, PoliteClient() as client:
-        console.log(f"[bold]Live feed scrape[/bold] - target {target_count} latest filings for {current_year}")
+        notes: list[str] = []
 
-        # Find the highest chunk that has cases for the current year.
-        # Probe from chunk 30 (5800-5999) downward.
-        latest_chunk_idx = None
-        for chunk_idx in range(30, -1, -1):
-            seq_min = chunk_idx * 200 + 1
-            seq_max = (chunk_idx + 1) * 200 - 1
-            url = WIPO_LIST_URL.format(year=current_year, seq_min=seq_min, seq_max=seq_max)
-
-            try:
-                html = await client.get(url)
-            except Exception as e:
-                run.add_error(url, e)
-                console.log(f"[red]Probe failed at chunk {chunk_idx}:[/red] {e}")
-                continue
-
-            cases = parse_list_chunk(html)
-            if cases:
-                latest_chunk_idx = chunk_idx
-                console.log(f"[green]Found latest chunk: {chunk_idx} (seq {seq_min}-{seq_max}, {len(cases)} cases)[/green]")
-                break
-
-        if latest_chunk_idx is None:
-            console.log("[yellow]No cases found for current year[/yellow]")
-            run.notes = f"No cases found for {current_year}"
+        # ---- 1. docket of filed cases
+        latest = await find_latest_range(client, year, latest_filing_seq(year))
+        if latest is None and now.month == 1:
+            year -= 1
+            latest = await find_latest_range(client, year, latest_filing_seq(year))
+        if latest is None:
+            run.notes = f"no casesx ranges found for {year}"
             return
 
-        # Collect cases from latest chunk + previous chunk (if needed)
-        all_cases: list[dict[str, Any]] = []
-        for chunk_idx in range(latest_chunk_idx, max(latest_chunk_idx - 2, -1), -1):
-            seq_min = chunk_idx * 200 + 1
-            seq_max = (chunk_idx + 1) * 200 - 1
-            url = WIPO_LIST_URL.format(year=current_year, seq_min=seq_min, seq_max=seq_max)
-
+        processed = 0
+        for idx in range(latest, max(-1, latest - ranges), -1):
+            lo, hi = chunk_bounds(idx)
+            url = CASES_LIST_URL.format(year=year, seq_min=lo, seq_max=hi)
             try:
-                html = await client.get(url)
-            except Exception as e:
+                items = parse_wipo_table(await client.get(url), "cases")
+            except Exception as e:  # noqa: BLE001
                 run.add_error(url, e)
-                console.log(f"[red]Failed to fetch chunk {chunk_idx}:[/red] {e}")
                 continue
-
-            chunk_cases = parse_list_chunk(html)
-            chunk_cases.sort(key=lambda c: c["case_number"], reverse=True)
-            all_cases.extend(chunk_cases)
-
-            if len(all_cases) >= target_count:
+            rows = [
+                {
+                    "provider": "WIPO",
+                    "case_number": it["case_number"],
+                    "filing_date": it.get("commenced"),
+                    "domains": it["domains"],
+                    "complainant": it["complainant"],
+                    "status": docket_status(it["status_text"]),
+                    "filing_url": it["link"],
+                }
+                for it in items
+            ]
+            if max_rows is not None:
+                rows = rows[: max(0, max_rows - processed)]
+            try:
+                added, changed = upsert_filings(rows)
+                run.cases_added += added
+                run.cases_updated += changed
+                processed += len(rows)
+                console.log(f"  docket {lo}-{hi}: {len(rows)} rows, +{added} new, {changed} changed")
+            except Exception as e:  # noqa: BLE001
+                run.add_error(url, e)
+            if max_rows is not None and processed >= max_rows:
                 break
+        notes.append(f"docket year={year} latest_range={latest} rows={processed}")
 
-        all_cases = sorted(all_cases, key=lambda c: c["case_number"], reverse=True)[:target_count]
-        console.log(f"[green]Top {len(all_cases)} most recent cases collected[/green]")
-
-        # Check which are already decided in the cases table
-        decided_case_numbers: set[str] = set()
-        if all_cases:
-            case_numbers = [c["case_number"] for c in all_cases]
-            existing = (
-                supabase()
-                .table("cases")
-                .select("case_number")
-                .in_("case_number", case_numbers)
-                .eq("provider", "WIPO")
-                .execute()
-            )
-            decided_case_numbers = {row["case_number"] for row in (existing.data or [])}
-
-        # Upsert into live_filings using ACTUAL schema columns:
-        # provider, case_number, filing_date, domains, complainant, status, filing_url
-        added = 0
-        promoted = 0
-        for case_stub in all_cases:
-            case_number = case_stub["case_number"]
-            status = "DECIDED" if case_number in decided_case_numbers else "FILED"
-
-            existing_filing = (
-                supabase()
-                .table("live_filings")
-                .select("id, status")
-                .eq("provider", "WIPO")
-                .eq("case_number", case_number)
-                .limit(1)
-                .execute()
-            )
-
-            row = {
-                "provider": "WIPO",
-                "case_number": case_number,
-                "filing_url": case_stub.get("decision_url"),
-                "domains": case_stub.get("domains", []),
-                "complainant": case_stub.get("complainant_name"),  # match schema column name
-                "status": status,
-            }
-
-            if existing_filing.data:
-                if existing_filing.data[0].get("status") != status:
-                    supabase().table("live_filings").update({"status": status}).eq(
-                        "id", existing_filing.data[0]["id"]
-                    ).execute()
-                    if status == "DECIDED":
-                        promoted += 1
-            else:
-                supabase().table("live_filings").insert(row).execute()
-                added += 1
-                run.cases_added += 1
-
-        console.log(
-            f"[bold green]Live feed complete:[/bold green] "
-            f"added={added} promoted_to_decided={promoted}"
-        )
-        run.notes = f"added={added}, promoted_to_decided={promoted}, year={current_year}"
+        # ---- 2. newest decisions for the current year
+        start = max(0, last_indexed_seq(year) // 200 - 1)
+        dec_rows = 0
+        for idx in range(start, start + 4):
+            lo, hi = chunk_bounds(idx)
+            url = WIPO_LIST_URL.format(year=year, seq_min=lo, seq_max=hi)
+            try:
+                items = parse_wipo_table(await client.get(url), "decisions")
+            except Exception as e:  # noqa: BLE001
+                run.add_error(url, e)
+                continue
+            if not items:
+                break
+            cases = [
+                ScrapedCase(
+                    provider="WIPO",
+                    case_number=it["case_number"],
+                    decision_url=it["link"] or f"{WIPO_BASE}/amc/en/domains/search/text.jsp?case={it['case_number']}",
+                    domains=it["domains"],
+                    complainant_name=it["complainant"],
+                    respondent_name=it["respondent"],
+                    outcome=map_outcome(it["status_text"]),
+                )
+                for it in items
+            ]
+            try:
+                added, updated = upsert_cases_batch(cases)
+                run.cases_added += added
+                run.cases_updated += updated
+                dec_rows += len(cases)
+            except Exception as e:  # noqa: BLE001
+                run.add_error(url, e)
+        notes.append(f"decisions rows={dec_rows}")
+        run.notes = "; ".join(notes)
 
 
 @click.command()
-@click.option("--max", "max_filings", type=int, default=50, help="Max live filings to keep (default 50)")
-def main(max_filings: int) -> None:
-    asyncio.run(scrape_live_filings(max_filings))
+@click.option("--ranges", type=int, default=3, help="How many of the newest docket ranges to scan")
+@click.option("--max", "max_rows", type=int, default=None, help="Cap docket rows (testing)")
+def main(ranges: int, max_rows: int | None) -> None:
+    asyncio.run(scrape_live(ranges, max_rows))
 
 
 if __name__ == "__main__":
