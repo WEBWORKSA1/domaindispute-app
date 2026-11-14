@@ -1,4 +1,4 @@
-export const metadata = { title: 'Self-Representation Guide - DomainDispute' };
+export const metadata = { title: 'Self-Representation Guide - DomainsDispute' };
 
 export default function SelfRepGuidePage() {
   return (

@@ -12,7 +12,7 @@ export const CONTESTS = [
     ends: '2026-12-31',
     summary:
       'Each round we pick ten pending WIPO cases from the live docket. Predict the outcome of each (transfer, denial or termination) before the decisions are published. Highest score wins; ties go to the earliest complete entry.',
-    prizes: ['Winner spotlight on DomainDispute.com', 'Sponsor-provided prizes announced at round launch', 'Digital certificate for the top three'],
+    prizes: ['Winner spotlight on DomainsDispute.com', 'Sponsor-provided prizes announced at round launch', 'Digital certificate for the top three'],
     howTo: ['Register with the form below', 'We email the ten cases when the round opens', 'Submit your predictions before each decision appears', 'Results are scored against published decisions'],
   },
   {
@@ -79,7 +79,7 @@ export const SPONSOR_PACKAGES = [
   },
   {
     name: 'Website or domain acquisition',
-    body: 'DomainDispute.com and the platform are open to acquisition and joint-venture conversations.',
+    body: 'DomainsDispute.com and the platform are open to acquisition and joint-venture conversations.',
   },
 ] as const;
 

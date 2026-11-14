@@ -4,7 +4,7 @@ import { SmartForm } from '@/components/smart-form';
 import { DONATION_TIERS, PAYMENT_LINKS } from '@/lib/content/programs';
 
 export const metadata: Metadata = {
-  title: 'Support DomainDispute.com',
+  title: 'Support DomainsDispute.com',
   description: 'Help keep the UDRP case library, live docket and guides free. Donations fund operations, research, promotion, hiring and contest prizes.',
   alternates: { canonical: '/support' },
 };
@@ -23,7 +23,7 @@ export default function SupportPage() {
       <PageHeader
         crumbs={[{ href: '/support', label: 'Support the project' }]}
         title="Keep domain dispute research free"
-        lede="DomainDispute.com is free to use. Contributions from readers and practitioners pay for the data pipeline, new guides, promotion, new hires and contest prizes."
+        lede="DomainsDispute.com is free to use. Contributions from readers and practitioners pay for the data pipeline, new guides, promotion, new hires and contest prizes."
       />
 
       <section className="wrap grid gap-12 py-12 lg:grid-cols-[1fr_1.1fr]">
@@ -60,7 +60,7 @@ export default function SupportPage() {
             ))}
           </ul>
           <p className="mt-8 text-sm leading-relaxed text-muted">
-            DomainDispute.com is a privately operated website, not a registered charity, so contributions are not tax-deductible. Supporters who opt in are thanked by name on the site. Contributions are voluntary and do not buy legal services, advertising or editorial influence.
+            DomainsDispute.com is a privately operated website, not a registered charity, so contributions are not tax-deductible. Supporters who opt in are thanked by name on the site. Contributions are voluntary and do not buy legal services, advertising or editorial influence.
           </p>
         </div>
 
@@ -84,7 +84,7 @@ export default function SupportPage() {
               { name: 'recognition', label: 'Public thanks', type: 'radio', options: ['Thank me by name', 'Keep me anonymous'], defaultValue: 'Keep me anonymous' },
               { name: 'message', label: 'Message (optional)', type: 'textarea', rows: 3 },
             ]}
-            consentLabel="I agree that DomainDispute.com may contact me about my pledge."
+            consentLabel="I agree that DomainsDispute.com may contact me about my pledge."
           />
         </div>
       </section>
