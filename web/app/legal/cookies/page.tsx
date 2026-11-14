@@ -3,18 +3,18 @@ import { LegalPage } from '@/components/legal-page';
 
 export const metadata: Metadata = {
   title: 'Cookie policy',
-  description: 'Which cookies and similar technologies DomainDispute.com uses, including Google AdSense, and how to control them.',
+  description: 'Which cookies and similar technologies DomainsDispute.com uses, including Google AdSense, and how to control them.',
   alternates: { canonical: '/legal/cookies' },
 };
 
 const BODY = `
-Cookies are small files a website stores in your browser. Similar technologies include local storage and pixels. This policy explains how DomainDispute.com uses them.
+Cookies are small files a website stores in your browser. Similar technologies include local storage and pixels. This policy explains how DomainsDispute.com uses them.
 
 ## Cookies we use
 
 | Type | Provider | Purpose | Can you refuse? |
 | --- | --- | --- | --- |
-| Strictly necessary | DomainDispute.com | Remembers your cookie choice and whether you closed a banner (browser local storage) | No, but they hold no personal data |
+| Strictly necessary | DomainsDispute.com | Remembers your cookie choice and whether you closed a banner (browser local storage) | No, but they hold no personal data |
 | Advertising | Google AdSense and its partners | Serve and measure ads, limit repetition, and personalise ads where permitted | Yes |
 | Embedded video | YouTube (privacy-enhanced mode) | Set only after you press play on a video | Yes, by not playing videos |
 

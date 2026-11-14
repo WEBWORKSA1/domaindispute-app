@@ -3,24 +3,24 @@ import { LegalPage } from '@/components/legal-page';
 
 export const metadata: Metadata = {
   title: 'Trademark and copyright disclosure',
-  description: 'Ownership of DomainDispute.com content and marks, third-party trademarks, use of public case data, and how to report infringement.',
+  description: 'Ownership of DomainsDispute.com content and marks, third-party trademarks, use of public case data, and how to report infringement.',
   alternates: { canonical: '/legal/copyright' },
 };
 
 const BODY = `
 ## Copyright
 
-Copyright (c) 2026 DomainDispute.com. All rights reserved. The text, guides, glossary, statistics, compilations, automated analyses, page designs, graphics, logo and software on this website are owned by DomainDispute.com or its licensors and are protected by copyright and database laws in Canada and internationally.
+Copyright (c) 2026 DomainsDispute.com. All rights reserved. The text, guides, glossary, statistics, compilations, automated analyses, page designs, graphics, logo and software on this website are owned by DomainsDispute.com or its licensors and are protected by copyright and database laws in Canada and internationally.
 
 You may quote short excerpts with attribution and a link to the source page. Any other reproduction, republication or systematic extraction, including scraping the case database, requires prior written permission. To ask, use the [contact form](/contact?topic=Partnership).
 
 ## Our trademarks
 
-"DomainDispute", "DomainDispute.com" and the DomainDispute.com logo are trademarks of their owner. The domain name domaindispute.com is privately owned. Inquiries about the website or domain name can be made through the link at the top of every page.
+"DomainsDispute", "DomainsDispute.com" and the DomainsDispute.com logo are trademarks of their owner. The domain name domainsdispute.com is privately owned. Inquiries about the website or domain name can be made through the link at the top of every page.
 
 ## Third-party trademarks
 
-WIPO, ICANN, Forum (formerly the National Arbitration Forum), the Czech Arbitration Court, ADNDRC, CIIDRC, Nominet, CIRA, YouTube, Google and every company and brand name that appears in case records are trademarks or trade names of their respective owners. They are used only to identify those organisations and the parties to public proceedings. Their appearance does not imply any affiliation with, or endorsement of or by, DomainDispute.com.
+WIPO, ICANN, Forum (formerly the National Arbitration Forum), the Czech Arbitration Court, ADNDRC, CIIDRC, Nominet, CIRA, YouTube, Google and every company and brand name that appears in case records are trademarks or trade names of their respective owners. They are used only to identify those organisations and the parties to public proceedings. Their appearance does not imply any affiliation with, or endorsement of or by, DomainsDispute.com.
 
 ## Public case records
 

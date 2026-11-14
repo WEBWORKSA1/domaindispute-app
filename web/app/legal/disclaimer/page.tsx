@@ -3,18 +3,18 @@ import { LegalPage } from '@/components/legal-page';
 
 export const metadata: Metadata = {
   title: 'Legal disclaimer',
-  description: 'DomainDispute.com provides legal information and public data, not legal advice.',
+  description: 'DomainsDispute.com provides legal information and public data, not legal advice.',
   alternates: { canonical: '/legal/disclaimer' },
 };
 
 const BODY = `
 ## Not legal advice
 
-DomainDispute.com publishes general information about domain name disputes, public case records and self-help tools. This information is not legal advice and may not apply to your circumstances. Laws, rules, fees and provider practices change; we update the site regularly but cannot guarantee that every page reflects the latest position.
+DomainsDispute.com publishes general information about domain name disputes, public case records and self-help tools. This information is not legal advice and may not apply to your circumstances. Laws, rules, fees and provider practices change; we update the site regularly but cannot guarantee that every page reflects the latest position.
 
 ## No attorney-client relationship
 
-DomainDispute.com is not a law firm. Reading the site, using the tools, contacting us or requesting a free case review does not create an attorney-client relationship, and communications with us are not protected by legal privilege.
+DomainsDispute.com is not a law firm. Reading the site, using the tools, contacting us or requesting a free case review does not create an attorney-client relationship, and communications with us are not protected by legal privilege.
 
 ## Automated analysis and estimates
 
@@ -26,7 +26,7 @@ Statistics and past decisions describe what happened in other cases. They do not
 
 ## Independence
 
-DomainDispute.com is independent and is not affiliated with, endorsed by or sponsored by WIPO, ICANN, Forum, the Czech Arbitration Court or any other dispute resolution provider, registrar or registry.
+DomainsDispute.com is independent and is not affiliated with, endorsed by or sponsored by WIPO, ICANN, Forum, the Czech Arbitration Court or any other dispute resolution provider, registrar or registry.
 
 ## Referrals
 

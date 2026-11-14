@@ -3,12 +3,12 @@ import { LegalPage } from '@/components/legal-page';
 
 export const metadata: Metadata = {
   title: 'Privacy policy',
-  description: 'How DomainDispute.com collects, uses and protects personal information, including cookies and Google advertising.',
+  description: 'How DomainsDispute.com collects, uses and protects personal information, including cookies and Google advertising.',
   alternates: { canonical: '/legal/privacy' },
 };
 
 const BODY = `
-This policy explains what personal information DomainDispute.com ("we", "us") collects, why, and the choices you have. It applies to the website at domaindispute.com and its subdomains.
+This policy explains what personal information DomainsDispute.com ("we", "us") collects, why, and the choices you have. It applies to the website at domainsdispute.com and its subdomains.
 
 ## Information you give us
 

@@ -3,7 +3,7 @@ import { LegalPage } from '@/components/legal-page';
 
 export const metadata: Metadata = {
   title: 'Official contest rules',
-  description: 'Official rules for DomainDispute.com contests: eligibility, how to enter, judging, prizes and privacy.',
+  description: 'Official rules for DomainsDispute.com contests: eligibility, how to enter, judging, prizes and privacy.',
   alternates: { canonical: '/legal/contest-rules' },
 };
 
@@ -16,7 +16,7 @@ No purchase, payment or donation is required to enter or win. A purchase or dona
 
 ## 2. Organiser
 
-Contests are organised by DomainDispute.com ("the organiser").
+Contests are organised by DomainsDispute.com ("the organiser").
 
 ## 3. Eligibility
 

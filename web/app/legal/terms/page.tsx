@@ -3,12 +3,12 @@ import { LegalPage } from '@/components/legal-page';
 
 export const metadata: Metadata = {
   title: 'Terms of use',
-  description: 'The terms that apply to using DomainDispute.com, its data, tools and forms.',
+  description: 'The terms that apply to using DomainsDispute.com, its data, tools and forms.',
   alternates: { canonical: '/legal/terms' },
 };
 
 const BODY = `
-By using DomainDispute.com (the "site") you agree to these terms. If you do not agree, please do not use the site.
+By using DomainsDispute.com (the "site") you agree to these terms. If you do not agree, please do not use the site.
 
 ## 1. Information, not legal advice
 
@@ -41,7 +41,7 @@ Voluntary contributions are not tax-deductible and do not purchase any service. 
 
 ## 7. No warranty; limitation of liability
 
-The site is provided "as is" without warranties of any kind. To the fullest extent permitted by law, DomainDispute.com is not liable for any indirect, incidental or consequential loss, or for any loss arising from reliance on information on the site, including missed deadlines.
+The site is provided "as is" without warranties of any kind. To the fullest extent permitted by law, DomainsDispute.com is not liable for any indirect, incidental or consequential loss, or for any loss arising from reliance on information on the site, including missed deadlines.
 
 ## 8. Changes and termination
 
