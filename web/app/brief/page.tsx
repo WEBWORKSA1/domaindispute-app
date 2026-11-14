@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import type { Metadata } from 'next';
-import { getBriefIndex } from '@/lib/data/cases';
+import { BULK_IMPORT_THRESHOLD, getBriefIndex } from '@/lib/data/cases';
 import { EmptyState, HelpCta, PageHeader } from '@/components/ui';
 import { EmailSignup } from '@/components/email-signup';
 import { formatDate, num } from '@/lib/utils';
@@ -39,7 +39,10 @@ export default async function BriefIndexPage() {
                 <Link href={`/brief/${d.day}`} className="flex flex-wrap items-baseline justify-between gap-3 px-1 py-4 hover:bg-bone/60">
                   <span className="font-serif text-lg font-semibold text-ink">{formatDate(d.day, 'EEEE, MMMM d, yyyy')}</span>
                   <span className="text-[15px] text-muted">
-                    {num(d.filings)} new {d.filings === 1 ? 'filing' : 'filings'} · {num(d.decisions)} {d.decisions === 1 ? 'decision' : 'decisions'} indexed
+                    {num(d.filings)} new {d.filings === 1 ? 'filing' : 'filings'} ·{' '}
+                    {d.decisions > BULK_IMPORT_THRESHOLD
+                      ? `${num(d.decisions)} earlier decisions imported`
+                      : `${num(d.decisions)} ${d.decisions === 1 ? 'decision' : 'decisions'} indexed`}
                   </span>
                 </Link>
               </li>

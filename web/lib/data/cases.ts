@@ -350,6 +350,9 @@ export async function getAllFilingNumbers(): Promise<string[]> {
 // Daily brief
 // ---------------------------------------------------------------------------
 
+/** A day with more decisions than this was a catch-up import of older decisions, not one day's output. */
+export const BULK_IMPORT_THRESHOLD = 300;
+
 export function isoDay(d: Date): string {
   return d.toISOString().slice(0, 10);
 }

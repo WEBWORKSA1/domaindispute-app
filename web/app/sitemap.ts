@@ -2,7 +2,7 @@ import type { MetadataRoute } from 'next';
 import { SITE } from '@/lib/site';
 import { GUIDES } from '@/lib/content/guides';
 import { PATTERNS } from '@/lib/patterns/data';
-import { getAllFilingNumbers, getSlimCases, isoDay } from '@/lib/data/cases';
+import { getAllFilingNumbers, getBriefIndex, getSlimCases } from '@/lib/data/cases';
 
 export const revalidate = 86400;
 
@@ -57,12 +57,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   for (const g of GUIDES) out.push({ url: `${SITE.url}/guides/${g.slug}`, lastModified: new Date(g.updated), changeFrequency: 'monthly', priority: 0.8 });
   for (const p of PATTERNS) out.push({ url: `${SITE.url}/patterns/${p.slug}`, changeFrequency: 'monthly', priority: 0.6 });
-  for (let i = 0; i < 14; i++) {
-    const d = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() - i));
-    out.push({ url: `${SITE.url}/brief/${isoDay(d)}`, changeFrequency: 'daily', priority: 0.4 });
+  const [cases, filings, briefDays] = await Promise.all([getSlimCases(), getAllFilingNumbers(), getBriefIndex(14)]);
+  // Only days that have content; empty brief pages are noindex.
+  for (const d of briefDays) {
+    if (d.decisions + d.filings > 0) out.push({ url: `${SITE.url}/brief/${d.day}`, changeFrequency: 'daily', priority: 0.4 });
   }
 
-  const [cases, filings] = await Promise.all([getSlimCases(), getAllFilingNumbers()]);
   const seen = new Set<string>();
   for (const c of cases) {
     seen.add(c.case_number);
