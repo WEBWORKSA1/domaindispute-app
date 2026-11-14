@@ -7,8 +7,8 @@ import { num } from '@/lib/utils';
 export const revalidate = 3600;
 
 export const metadata: Metadata = {
-  title: 'About DomainDispute.com',
-  description: 'What DomainDispute.com is, where the data comes from, how it updates, our editorial standards and how the site is funded.',
+  title: 'About DomainsDispute.com',
+  description: 'What DomainsDispute.com is, where the data comes from, how it updates, our editorial standards and how the site is funded.',
   alternates: { canonical: '/about' },
 };
 
@@ -18,14 +18,14 @@ export default async function AboutPage() {
     <>
       <PageHeader
         crumbs={[{ href: '/about', label: 'About' }]}
-        title="About DomainDispute.com"
+        title="About DomainsDispute.com"
         lede="A free, independent resource for anyone involved in a domain name dispute: the registrant who just received a complaint, the brand owner deciding whether to file, and the researcher tracking how panels decide."
       />
       <div className="wrap grid gap-12 py-12 lg:grid-cols-[minmax(0,1fr)_300px]">
         <div className="prose-dd">
           <h2>What we do</h2>
           <p>
-            Domain disputes move fast. A respondent usually has 20 days to answer a UDRP complaint, and the information needed to make good decisions is scattered across provider websites, PDFs and practitioner blogs. DomainDispute.com brings it together in one place:
+            Domain disputes move fast. A respondent usually has 20 days to answer a UDRP complaint, and the information needed to make good decisions is scattered across provider websites, PDFs and practitioner blogs. DomainsDispute.com brings it together in one place:
           </p>
           <ul>
             <li>A searchable library of {counts.total ? num(counts.total) : 'thousands of'} WIPO gTLD decisions, with an automated analysis of each disputed domain.</li>
@@ -50,7 +50,7 @@ export default async function AboutPage() {
 
           <h2>What we are not</h2>
           <p>
-            DomainDispute.com is not a law firm and is not affiliated with WIPO, ICANN, Forum or any other dispute resolution provider. Nothing on the site is legal advice. If you need advice about your situation, speak to a qualified lawyer; the case review can introduce you to one if you ask.
+            DomainsDispute.com is not a law firm and is not affiliated with WIPO, ICANN, Forum or any other dispute resolution provider. Nothing on the site is legal advice. If you need advice about your situation, speak to a qualified lawyer; the case review can introduce you to one if you ask.
           </p>
 
           <h2>How the site is funded</h2>

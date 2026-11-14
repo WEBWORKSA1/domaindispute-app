@@ -5,8 +5,8 @@ import { SmartForm } from '@/components/smart-form';
 import { SITE } from '@/lib/site';
 
 export const metadata: Metadata = {
-  title: 'Contact DomainDispute.com',
-  description: 'Send a question, data correction, press, partnership, advertising or acquisition inquiry to DomainDispute.com.',
+  title: 'Contact DomainsDispute.com',
+  description: 'Send a question, data correction, press, partnership, advertising or acquisition inquiry to DomainsDispute.com.',
   alternates: { canonical: '/contact' },
 };
 

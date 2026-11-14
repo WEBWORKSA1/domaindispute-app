@@ -4,7 +4,7 @@ import { SmartForm } from '@/components/smart-form';
 import { ROLES } from '@/lib/content/programs';
 
 export const metadata: Metadata = {
-  title: 'Careers: work on DomainDispute.com',
+  title: 'Careers: work on DomainsDispute.com',
   description: 'Join our talent pool: domain dispute researchers, legal writers, developers, partnership leads and video producers. Remote.',
   alternates: { canonical: '/careers' },
 };
@@ -52,7 +52,7 @@ export default function CareersPage() {
               { name: 'portfolio', label: 'Portfolio, LinkedIn or GitHub', type: 'url', placeholder: 'https://' },
               { name: 'message', label: 'Why you, in a few lines', type: 'textarea', required: true, rows: 5 },
             ]}
-            consentLabel="I agree that DomainDispute.com may keep my application for up to 12 months and contact me about opportunities."
+            consentLabel="I agree that DomainsDispute.com may keep my application for up to 12 months and contact me about opportunities."
           />
         </section>
       </div>

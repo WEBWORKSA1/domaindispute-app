@@ -9,7 +9,7 @@ import { num } from '@/lib/utils';
 export const revalidate = 3600;
 
 export const metadata: Metadata = {
-  title: 'Advertise, sponsor or partner with DomainDispute.com',
+  title: 'Advertise, sponsor or partner with DomainsDispute.com',
   description: 'Reach trademark owners, domain investors and IP practitioners. Sponsorships, advertising, referral partnerships, data licensing and acquisition inquiries.',
   alternates: { canonical: '/advertise' },
 };
@@ -32,7 +32,7 @@ export default async function AdvertisePage() {
       />
       <div className="wrap py-12">
         <section>
-          <h2 className="font-serif text-2xl font-semibold">Who reads DomainDispute.com</h2>
+          <h2 className="font-serif text-2xl font-semibold">Who reads DomainsDispute.com</h2>
           <div className="mt-5 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
             {AUDIENCE.map((a) => (
               <div key={a.title} className="border-t-2 border-ink pt-3">
