@@ -194,3 +194,12 @@ export function responseDeadline(commencementIso: string | null | undefined): { 
   const d = (n: number) => new Date(t + n * 86400000).toISOString().slice(0, 10);
   return { due: d(20), extended: d(24) };
 }
+
+export type DeadlinePhase = 'open' | 'extension' | 'closed';
+
+/** Where a pending case sits relative to today: response window open, only the 4-day extension left, or closed. */
+export function deadlinePhase(d: { due: string; extended: string }, todayIso = new Date().toISOString().slice(0, 10)): DeadlinePhase {
+  if (todayIso <= d.due) return 'open';
+  if (todayIso <= d.extended) return 'extension';
+  return 'closed';
+}
