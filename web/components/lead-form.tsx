@@ -274,7 +274,7 @@ export function LeadForm() {
             <label className="flex items-start gap-3 text-sm text-ink-soft sm:col-span-2">
               <input type="checkbox" checked={consent} onChange={(e) => setConsent(e.target.checked)} className="mt-0.5 h-4 w-4 accent-[#12233b]" />
               <span>
-                I agree that DomainDispute.com may contact me about this request and, if I asked for a referral, share my summary with a lawyer I approve first. See the <Link href="/legal/privacy" className="link">privacy policy</Link>.
+                I agree that DomainsDispute.com may contact me about this request and, if I asked for a referral, share my summary with a lawyer I approve first. See the <Link href="/legal/privacy" className="link">privacy policy</Link>.
               </span>
             </label>
           </div>
