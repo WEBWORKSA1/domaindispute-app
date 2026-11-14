@@ -1,1 +1,1 @@
-"""DomainDispute scrapers."""
+"""DomainsDispute scrapers."""

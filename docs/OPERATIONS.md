@@ -19,7 +19,7 @@ Required: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE
 
 Optional:
 
-- `NEXT_PUBLIC_SITE_URL` (default `https://domaindispute.com`)
+- `NEXT_PUBLIC_SITE_URL` (default `https://domainsdispute.com`)
 - `CONTACT_FORWARD_EMAIL` - inbox that receives form submissions (a built-in default is used when unset; it is never sent to the browser)
 - `NEXT_PUBLIC_ADSENSE_SLOT_INLINE`, `NEXT_PUBLIC_ADSENSE_SLOT_SIDEBAR`, `NEXT_PUBLIC_ADSENSE_SLOT_FOOTER` - ad unit IDs; slots stay hidden until set (Auto ads work without them)
 - `NEXT_PUBLIC_DONATE_CARD_URL`, `NEXT_PUBLIC_DONATE_PAYPAL_URL`, `NEXT_PUBLIC_DONATE_COFFEE_URL` - payment links on /support; without them the page collects pledges through the form

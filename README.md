@@ -1,4 +1,4 @@
-# DomainDispute.com
+# DomainsDispute.com
 
 Self-help research and document-preparation platform for domain dispute self-representation. Not a law firm.
 
@@ -47,4 +47,4 @@ Quebec carve-out: Quebec-IP-detected purchases of Tier 2/3 are blocked at checko
 
 ## License
 
-Proprietary. © 2026 DomainDispute.com. All rights reserved.
+Proprietary. © 2026 DomainsDispute.com. All rights reserved.

@@ -2,10 +2,10 @@
 
 Purpose: find the features, forms, content and design patterns that the best sites in
 domain-dispute, domain-industry, legal self-help and legal lead-generation use, and
-decide what DomainDispute.com adopts. "Checked" = reviewed live during this rebuild;
+decide what DomainsDispute.com adopts. "Checked" = reviewed live during this rebuild;
 "Known" = reviewed from prior knowledge of the site.
 
-| # | Site | Category | What it does well | Adopted on DomainDispute.com |
+| # | Site | Category | What it does well | Adopted on DomainsDispute.com |
 |---|------|----------|-------------------|------------------------------|
 | 1 | wipo.int/amc — Domain Name Decisions (decisionsx) | Provider | Year/range index of every decision with outcome column | Primary source for decisions; per-case pages + outcome stats |
 | 2 | wipo.int/amc — Domain Name Cases (casesx) — Checked | Provider | Docket of filed cases with commencement date and status (Pending / Decided / Terminated) | New live docket of pending filings with response-deadline estimates |
