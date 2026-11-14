@@ -1,4 +1,4 @@
-export const metadata = { title: 'UDRP Filing Procedure - DomainDispute' };
+export const metadata = { title: 'UDRP Filing Procedure - DomainsDispute' };
 
 export default function UDRPPage() {
   return (
@@ -40,7 +40,7 @@ export default function UDRPPage() {
 
         <section>
           <h2 className="font-serif text-[26px] mb-4">Self-representation</h2>
-          <p className="text-muted">Representation is optional. The UDRP Rules only ask for details of &ldquo;any representative authorized to act&rdquo; for a party (paragraphs 3(b)(ii) and 5(c)(ii)), and WIPO and Forum publish model complaint and response forms. Many complaints and responses are filed by the parties themselves. DomainDispute.com supports them with case research, guides and free tools.</p>
+          <p className="text-muted">Representation is optional. The UDRP Rules only ask for details of &ldquo;any representative authorized to act&rdquo; for a party (paragraphs 3(b)(ii) and 5(c)(ii)), and WIPO and Forum publish model complaint and response forms. Many complaints and responses are filed by the parties themselves. DomainsDispute.com supports them with case research, guides and free tools.</p>
         </section>
       </div>
 

@@ -5,12 +5,12 @@ import { JsonLd } from '@/components/json-ld';
 
 export const metadata: Metadata = {
   title: 'Domain dispute FAQ',
-  description: 'Answers to common questions about UDRP complaints, deadlines, costs, self-representation and how DomainDispute.com works.',
+  description: 'Answers to common questions about UDRP complaints, deadlines, costs, self-representation and how DomainsDispute.com works.',
   alternates: { canonical: '/faq' },
 };
 
 const FAQS: Array<{ q: string; a: string; link?: { href: string; label: string } }> = [
-  { q: 'Is DomainDispute.com a law firm?', a: 'No. We publish legal information, public case records and free tools. We do not give legal advice, and using the site does not create an attorney-client relationship.' },
+  { q: 'Is DomainsDispute.com a law firm?', a: 'No. We publish legal information, public case records and free tools. We do not give legal advice, and using the site does not create an attorney-client relationship.' },
   { q: 'Do I need a lawyer for a UDRP case?', a: 'No. Representation is optional: the UDRP Rules only ask for details of "any representative authorized to act" for a party, and providers publish model complaint and response forms for parties filing themselves. Consider a lawyer when the domain is valuable or the facts are complex.', link: { href: '/resources/self-representation-guide', label: 'Representing yourself' } },
   { q: 'How long do I have to respond to a complaint?', a: 'Twenty days from the date the proceeding commenced (Rules 5(a)). You can request four extra calendar days, which providers grant automatically on a first request.', link: { href: '/tools/deadline-calculator', label: 'Deadline calculator' } },
   { q: 'How much does a UDRP cost?', a: 'Provider fees for a single panelist start at EUR 800 at CAC (1-5 domains), US$1,330 at Forum (1-2 domains) and US$1,500 at WIPO (1-5 domains). The complainant pays; the respondent pays nothing unless it requests a three-member panel.', link: { href: '/tools/fee-estimator', label: 'Fee estimator' } },

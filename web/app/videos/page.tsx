@@ -46,7 +46,7 @@ export default function VideosPage() {
           );
         })}
         <p className="max-w-3xl text-sm text-muted">
-          Videos are embedded from YouTube and remain the property of their creators. DomainDispute.com is not affiliated with the creators and does not endorse any service they offer. Want your video featured? <a className="link" href="/contact?topic=Video%20submission">Send it to us</a>.
+          Videos are embedded from YouTube and remain the property of their creators. DomainsDispute.com is not affiliated with the creators and does not endorse any service they offer. Want your video featured? <a className="link" href="/contact?topic=Video%20submission">Send it to us</a>.
         </p>
         <div className="mt-12">
           <HelpCta tone="light" />

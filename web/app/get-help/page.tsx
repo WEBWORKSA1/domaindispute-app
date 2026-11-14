@@ -17,7 +17,7 @@ export const metadata: Metadata = {
 
 const FAQS = [
   { q: 'Is the review really free?', a: 'Yes. We review your summary and reply with general information about your options at no cost and with no obligation.' },
-  { q: 'Are you a law firm?', a: 'No. DomainDispute.com is an information service. If you ask for a referral, we can introduce you to an independent lawyer, but only after you approve it.' },
+  { q: 'Are you a law firm?', a: 'No. DomainsDispute.com is an information service. If you ask for a referral, we can introduce you to an independent lawyer, but only after you approve it.' },
   { q: 'How fast will I hear back?', a: 'Usually within one business day. If you tell us a response deadline is close, we prioritise your request.' },
   { q: 'Who sees my information?', a: 'Only our team. We never sell or publish it. See the privacy policy for details.' },
 ];
