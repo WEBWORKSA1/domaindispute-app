@@ -23,7 +23,8 @@ export async function generateMetadata({ searchParams }: { searchParams: Promise
   };
 }
 
-const OUTCOME_FILTERS = ['TRANSFER', 'DENY', 'RDNH', 'OTHER', 'WITHDRAWN'];
+// No RDNH chip: WIPO's public list marks RDNH cases as plain denials, so the filter would always be empty.
+const OUTCOME_FILTERS = ['TRANSFER', 'DENY', 'OTHER', 'WITHDRAWN'];
 const YEARS = ['2026', '2025', '2024'];
 const PAGE_SIZE = 30;
 

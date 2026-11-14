@@ -163,7 +163,7 @@ export default async function CaseDetailPage({ params }: PageProps) {
               <Fact label="Complainant" value={v.complainant ?? '-'} />
               <Fact label="Respondent" value={v.respondent ?? (v.pending ? 'Published with the decision' : '-')} />
               <Fact label="Status" value={v.pending ? 'Pending' : outcomeLabel(v.outcome)} />
-              <Fact label="Commenced" value={formatDate(v.commenced)} />
+              {v.commenced && <Fact label="Commenced" value={formatDate(v.commenced)} />}
               <Fact label={`Disputed domain${v.domains.length > 1 ? 's' : ''} (${v.domains.length})`} value={<DomainList domains={v.domains} max={20} />} wide />
             </dl>
           </section>
