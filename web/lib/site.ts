@@ -4,9 +4,9 @@
  */
 
 export const SITE = {
-  name: 'DomainDispute.com',
-  shortName: 'DomainDispute',
-  url: (process.env.NEXT_PUBLIC_SITE_URL ?? 'https://domaindispute.com').replace(/\/$/, ''),
+  name: 'DomainsDispute.com',
+  shortName: 'DomainsDispute',
+  url: (process.env.NEXT_PUBLIC_SITE_URL ?? 'https://domainsdispute.com').replace(/\/$/, ''),
   tagline: 'Domain dispute research, live UDRP docket, and free guidance',
   description:
     'Search 10,000+ UDRP decisions, track newly filed domain disputes, check response deadlines, and get free guidance before you file or respond.',

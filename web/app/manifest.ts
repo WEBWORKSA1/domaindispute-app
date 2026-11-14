@@ -2,8 +2,8 @@ import type { MetadataRoute } from 'next';
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: 'DomainDispute.com',
-    short_name: 'DomainDispute',
+    name: 'DomainsDispute.com',
+    short_name: 'DomainsDispute',
     description: 'UDRP case library, live dispute docket and free guidance.',
     start_url: '/',
     display: 'standalone',

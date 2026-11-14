@@ -7,10 +7,10 @@ export function SiteHeader() {
   return (
     <header className="sticky top-0 z-40 border-b border-bone-2 bg-paper/95 backdrop-blur supports-[backdrop-filter]:bg-paper/85">
       <div className="wrap flex h-16 items-center justify-between gap-6">
-        <Link href="/" className="flex shrink-0 items-center gap-2.5 text-ink" aria-label="DomainDispute.com home">
+        <Link href="/" className="flex shrink-0 items-center gap-2.5 text-ink" aria-label="DomainsDispute.com home">
           <Logo className="h-8 w-8" />
           <span className="font-serif text-[21px] font-bold tracking-tight">
-            DomainDispute<span className="text-oxblood">.com</span>
+            DomainsDispute<span className="text-oxblood">.com</span>
           </span>
         </Link>
 

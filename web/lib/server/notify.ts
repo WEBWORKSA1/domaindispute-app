@@ -62,7 +62,7 @@ async function forwardEmail(s: Submission): Promise<boolean> {
   const timer = setTimeout(() => controller.abort(), 9000);
   try {
     const body: Record<string, string> = {
-      _subject: `[DomainDispute] ${s.formLabel}: ${s.name || s.email}`,
+      _subject: `[DomainsDispute] ${s.formLabel}: ${s.name || s.email}`,
       _template: 'table',
       _captcha: 'false',
       _replyto: s.email,

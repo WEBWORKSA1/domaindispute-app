@@ -11,8 +11,8 @@ import './globals.css';
 export const metadata: Metadata = {
   metadataBase: new URL(SITE.url),
   title: {
-    default: 'DomainDispute.com - UDRP case library, live dispute docket & free guidance',
-    template: '%s | DomainDispute.com',
+    default: 'DomainsDispute.com - UDRP case library, live dispute docket & free guidance',
+    template: '%s | DomainsDispute.com',
   },
   description: SITE.description,
   applicationName: SITE.name,
@@ -31,7 +31,7 @@ export const metadata: Metadata = {
     type: 'website',
     siteName: SITE.name,
     url: SITE.url,
-    title: 'DomainDispute.com - UDRP case library, live docket & free guidance',
+    title: 'DomainsDispute.com - UDRP case library, live docket & free guidance',
     description: SITE.description,
     locale: 'en_US',
   },
