@@ -37,7 +37,7 @@ export function SmartForm({
   successTitle,
   successBody,
   role,
-  consentLabel = 'I agree that DomainDispute.com may contact me about this request.',
+  consentLabel = 'I agree that DomainsDispute.com may contact me about this request.',
   className,
 }: SmartFormProps) {
   const [values, setValues] = useState<Record<string, string>>(() =>
