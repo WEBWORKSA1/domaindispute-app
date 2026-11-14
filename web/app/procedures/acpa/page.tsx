@@ -1,4 +1,4 @@
-export const metadata = { title: 'ACPA Litigation - DomainDispute' };
+export const metadata = { title: 'ACPA Litigation - DomainsDispute' };
 
 export default function ACPAPage() {
   return (
@@ -23,7 +23,7 @@ export default function ACPAPage() {
 
         <section>
           <h2 className="font-serif text-[26px] mb-4">Cost &amp; complexity</h2>
-          <p className="text-muted">ACPA is real federal litigation. Expect $20,000-$200,000+ in legal costs. Cases run 12-24 months. <strong>This is not a self-help process.</strong> If you're considering ACPA, you should consult a qualified trademark litigator. DomainDispute does not support ACPA filings.</p>
+          <p className="text-muted">ACPA is real federal litigation. Expect $20,000-$200,000+ in legal costs. Cases run 12-24 months. <strong>This is not a self-help process.</strong> If you're considering ACPA, you should consult a qualified trademark litigator. DomainsDispute does not support ACPA filings.</p>
         </section>
 
         <section>

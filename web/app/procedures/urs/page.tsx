@@ -1,4 +1,4 @@
-export const metadata = { title: 'URS Proceedings - DomainDispute' };
+export const metadata = { title: 'URS Proceedings - DomainsDispute' };
 
 export default function URSPage() {
   return (

@@ -1,4 +1,4 @@
-export const metadata = { title: 'ccTLD Disputes - DomainDispute' };
+export const metadata = { title: 'ccTLD Disputes - DomainsDispute' };
 
 export default function CcTLDPage() {
   return (
@@ -34,7 +34,7 @@ export default function CcTLDPage() {
 
         <section>
           <h2 className="font-serif text-[26px] mb-4">Self-representation feasibility</h2>
-          <p className="text-muted">For English-language ccTLDs (.uk, .ca, .au, .in) self-representation is generally feasible. For non-English ccTLDs, professional representation in the local language is usually advisable. DomainDispute&apos;s Pre-Check supports gTLD UDRP cases primarily; ccTLD cases require additional research.</p>
+          <p className="text-muted">For English-language ccTLDs (.uk, .ca, .au, .in) self-representation is generally feasible. For non-English ccTLDs, professional representation in the local language is usually advisable. DomainsDispute&apos;s Pre-Check supports gTLD UDRP cases primarily; ccTLD cases require additional research.</p>
         </section>
       </div>
     </div>

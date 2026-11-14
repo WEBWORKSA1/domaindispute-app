@@ -1,4 +1,4 @@
-export const metadata = { title: 'RDNH Defense - DomainDispute' };
+export const metadata = { title: 'RDNH Defense - DomainsDispute' };
 
 export default function RDNHPage() {
   return (

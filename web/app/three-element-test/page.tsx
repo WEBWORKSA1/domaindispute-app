@@ -1,4 +1,4 @@
-export const metadata = { title: 'The Three-Element Test - DomainDispute' };
+export const metadata = { title: 'The Three-Element Test - DomainsDispute' };
 
 export default function ThreeElementTestPage() {
   return (
