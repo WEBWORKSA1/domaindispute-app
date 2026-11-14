@@ -99,7 +99,7 @@ export function renderDailyCaseAlert(ctx: EmailContext): { subject: string; html
   const featuredPatternBlock = ctx.featuredPattern
     ? '<tr><td style="padding:32px 0;border-bottom:1px solid #1a1410;">' +
       '<div style="font-family:monospace;font-size:10px;letter-spacing:0.18em;text-transform:uppercase;color:#6b5e52;margin-bottom:12px;">Featured Pattern</div>' +
-      '<a href="https://domaindispute.com/patterns/' + escapeHtml(ctx.featuredPattern.slug) + '" style="text-decoration:none;color:#1a1410;">' +
+      '<a href="https://domainsdispute.com/patterns/' + escapeHtml(ctx.featuredPattern.slug) + '" style="text-decoration:none;color:#1a1410;">' +
       '<h3 style="font-family:Georgia,serif;font-size:24px;margin:0 0 8px 0;">' + escapeHtml(ctx.featuredPattern.name) + '</h3>' +
       '<p style="font-size:15px;line-height:1.6;color:#2d2520;margin:0;">' + escapeHtml(ctx.featuredPattern.blurb) + '</p>' +
       '</a></td></tr>'
@@ -112,21 +112,21 @@ export function renderDailyCaseAlert(ctx: EmailContext): { subject: string; html
     '<table cellspacing="0" cellpadding="0" border="0" width="600" style="max-width:600px;">' +
     '<tr><td style="padding-bottom:24px;border-bottom:1px solid #1a1410;">' +
     '<div style="font-family:monospace;font-size:10px;letter-spacing:0.18em;text-transform:uppercase;color:#6b5e52;margin-bottom:8px;">Daily Case Alert &middot; ' + escapeHtml(ctx.dateLabel) + '</div>' +
-    '<a href="https://domaindispute.com" style="text-decoration:none;color:#1a1410;"><span style="font-family:Georgia,serif;font-size:28px;font-weight:900;letter-spacing:-0.02em;">DomainDispute.com</span></a>' +
+    '<a href="https://domainsdispute.com" style="text-decoration:none;color:#1a1410;"><span style="font-family:Georgia,serif;font-size:28px;font-weight:900;letter-spacing:-0.02em;">DomainsDispute.com</span></a>' +
     '</td></tr>' +
     '<tr><td style="padding:24px 0;"><h2 style="font-family:Georgia,serif;font-size:20px;margin:0 0 16px 0;">New Filings (last 24h)</h2><table width="100%">' + filingsRows + '</table></td></tr>' +
     '<tr><td style="padding:24px 0;border-top:1px solid #d4cab5;"><h2 style="font-family:Georgia,serif;font-size:20px;margin:0 0 16px 0;">Recent Decisions</h2><table width="100%">' + decisionsRows + '</table></td></tr>' +
     featuredPatternBlock +
     '<tr><td style="padding:24px 0;font-size:11px;color:#6b5e52;text-align:center;">' +
-    'You receive this because you signed up at domaindispute.com.<br/>' +
+    'You receive this because you signed up at domainsdispute.com.<br/>' +
     '<a href="' + escapeHtml(ctx.unsubscribeUrl) + '" style="color:#6b5e52;">Unsubscribe</a> &middot; ' +
-    '<a href="https://domaindispute.com" style="color:#6b5e52;">Visit site</a>' +
+    '<a href="https://domainsdispute.com" style="color:#6b5e52;">Visit site</a>' +
     '</td></tr>' +
     '</table></td></tr></table></body></html>';
 
   // Plaintext fallback
   const text = [
-    'DomainDispute.com - Daily Case Alert',
+    'DomainsDispute.com - Daily Case Alert',
     ctx.dateLabel,
     '',
     'NEW FILINGS (last 24h):',
@@ -139,7 +139,7 @@ export function renderDailyCaseAlert(ctx: EmailContext): { subject: string; html
       (d) => '  ' + d.provider + ' ' + d.case_number + ' - ' + (d.domains[0] ?? '-') + (d.outcome ? ' [' + d.outcome + ']' : '')
     ),
     '',
-    'Visit: https://domaindispute.com',
+    'Visit: https://domainsdispute.com',
     'Unsubscribe: ' + ctx.unsubscribeUrl,
   ].join('\n');
 
