@@ -71,7 +71,7 @@ export default async function HomePage() {
           <Figure value={num(counts.total)} label="decisions indexed" />
           <Figure value={pct(winRate)} label="won by complainants (decided cases)" />
           <Figure value={num(counts.DENY + counts.RDNH)} label="complaints denied" />
-          <Figure value={num(counts.RDNH)} label="reverse hijacking findings" />
+          <Figure value={num(counts.openFilings)} label="complaints pending now" />
         </dl>
       </section>
 

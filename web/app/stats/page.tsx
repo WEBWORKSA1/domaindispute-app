@@ -11,14 +11,14 @@ export const revalidate = 21600;
 export const metadata: Metadata = {
   title: 'UDRP statistics: outcomes, extensions and top complainants',
   description:
-    'Live statistics computed from every UDRP decision in our index: complainant success rate, denials, reverse hijacking findings, top domain extensions and most active complainants.',
+    'Live statistics computed from every UDRP decision in our index: complainant success rate, denials, terminations, top domain extensions and most active complainants.',
   alternates: { canonical: '/stats' },
 };
 
 type Bucket = 'win' | 'deny' | 'term';
 const SERIES: Array<{ key: Bucket; label: string; color: string; text: string }> = [
   { key: 'win', label: 'Transferred or cancelled', color: '#2a78d6', text: '#ffffff' },
-  { key: 'deny', label: 'Denied (incl. RDNH)', color: '#eb6834', text: '#12233b' },
+  { key: 'deny', label: 'Complaint denied', color: '#eb6834', text: '#12233b' },
   { key: 'term', label: 'Terminated', color: '#1baf7a', text: '#12233b' },
 ];
 
@@ -34,13 +34,11 @@ function compute(rows: SlimCase[]) {
   const tlds = new Map<string, number>();
   const complainants = new Map<string, { name: string; n: number; wins: number }>();
   let multi = 0;
-  let rdnh = 0;
   const totals: Record<Bucket, number> = { win: 0, deny: 0, term: 0 };
 
   for (const r of rows) {
     const y = r.case_number.slice(1, 5);
     const b = bucket(r.outcome);
-    if (r.outcome === 'RDNH') rdnh++;
     if (b) {
       totals[b]++;
       const yr = years.get(y) ?? { win: 0, deny: 0, term: 0 };
@@ -63,7 +61,6 @@ function compute(rows: SlimCase[]) {
   return {
     total: rows.length,
     totals,
-    rdnh,
     multi,
     winRate: decided ? totals.win / decided : null,
     years: [...years.entries()].sort((a, b) => b[0].localeCompare(a[0])),
@@ -91,7 +88,7 @@ export default async function StatsPage() {
         <dl className="grid grid-cols-2 gap-6 border-b border-bone-2 pb-10 md:grid-cols-4">
           <Stat value={pct(s.winRate)} label="Complainant success rate (decided cases)" />
           <Stat value={num(s.totals.deny)} label="Complaints denied" />
-          <Stat value={num(s.rdnh)} label="Reverse hijacking findings" />
+          <Stat value={num(s.tldCount)} label="Different domain extensions disputed" />
           <Stat value={pct(s.total ? s.totals.term / s.total : null)} label="Cases terminated without decision" />
         </dl>
       </section>
@@ -193,7 +190,7 @@ export default async function StatsPage() {
         <h2 className="font-serif text-2xl font-semibold">How these numbers are calculated</h2>
         <div className="prose-dd mt-3">
           <p>
-            We index the WIPO decisions list for gTLD cases (prefix D) and classify each case by the result the provider publishes. &ldquo;Success rate&rdquo; counts transfers and cancellations against all decided cases, excluding terminations, which mostly reflect settlements. Statistics refresh every six hours. Other providers and ccTLD cases are not yet included, so figures describe WIPO gTLD cases only.
+            We index the WIPO decisions list for gTLD cases (prefix D) and classify each case by the result the provider publishes. &ldquo;Success rate&rdquo; counts transfers and cancellations against all decided cases, excluding terminations, which mostly reflect settlements. Statistics refresh every six hours. Other providers and ccTLD cases are not yet included, so figures describe WIPO gTLD cases only. WIPO&apos;s list does not separate reverse domain name hijacking findings from other denials, so they are counted as denials here.
           </p>
           <p>
             Want the raw data for research? See <Link href="/advertise">data partnerships</Link>.
