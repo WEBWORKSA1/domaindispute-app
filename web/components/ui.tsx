@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import type { CaseRow, FilingRow } from '@/lib/data/cases';
 import { cn, formatDate, outcomeColor, outcomeLabel } from '@/lib/utils';
-import { responseDeadline } from '@/lib/analysis';
+import { deadlinePhase, responseDeadline } from '@/lib/analysis';
 import { JsonLd } from '@/components/json-ld';
 import { SITE } from '@/lib/site';
 
@@ -118,6 +118,7 @@ export function FilingList({ rows, showDeadline = true }: { rows: FilingRow[]; s
     <ul className="divide-y divide-bone-2 border-y border-bone-2">
       {rows.map((f) => {
         const dl = responseDeadline(f.filing_date);
+        const phase = dl ? deadlinePhase(dl) : null;
         return (
           <li key={f.id}>
             <Link
@@ -133,7 +134,9 @@ export function FilingList({ rows, showDeadline = true }: { rows: FilingRow[]; s
                 {f.filing_date ? (
                   <>
                     <span className="block">Filed {formatDate(f.filing_date)}</span>
-                    {showDeadline && dl && <span className="block font-semibold text-ink">Reply by ~{formatDate(dl.due)}</span>}
+                    {showDeadline && dl && phase === 'open' && <span className="block font-semibold text-ink">Reply by ~{formatDate(dl.due)}</span>}
+                    {showDeadline && dl && phase === 'extension' && <span className="block font-semibold text-ink">Extended reply by ~{formatDate(dl.extended)}</span>}
+                    {showDeadline && phase === 'closed' && <span className="block">Awaiting decision</span>}
                   </>
                 ) : (
                   <span className="pill bg-legal-pad text-[#7a5410]">Compliance review</span>

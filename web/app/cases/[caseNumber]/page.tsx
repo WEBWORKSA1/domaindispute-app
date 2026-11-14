@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
 import { casesByComplainant, getCaseByNumber, type CaseLookup } from '@/lib/data/cases';
-import { domainAnatomy, outcomeExplainer, patternSentence, responseDeadline } from '@/lib/analysis';
+import { deadlinePhase, domainAnatomy, outcomeExplainer, patternSentence, responseDeadline } from '@/lib/analysis';
 import { Breadcrumbs, CaseList, DomainList, HelpCta, OutcomeBadge } from '@/components/ui';
 import { JsonLd } from '@/components/json-ld';
 import { AdSlot } from '@/components/ad-slot';
@@ -94,6 +94,7 @@ export default async function CaseDetailPage({ params }: PageProps) {
   const anatomy = v.domains.slice(0, 6).map((d) => domainAnatomy(d, v.complainant));
   const explainer = outcomeExplainer(v.pending ? null : v.outcome);
   const deadline = v.pending ? responseDeadline(v.commenced) : null;
+  const phase = deadline ? deadlinePhase(deadline) : null;
   const history = v.complainant ? await casesByComplainant(v.complainant, v.caseNumber, 6) : { rows: [], total: 0 };
   const helpHref = `/get-help?situation=${v.pending ? 'respondent' : 'other'}&domain=${encodeURIComponent(primary)}&case=${v.caseNumber}`;
 
@@ -139,12 +140,24 @@ export default async function CaseDetailPage({ params }: PageProps) {
           {v.pending && (
             <div className="mb-8 rounded-lg border border-amber/40 bg-legal-pad p-5">
               <h2 className="font-serif text-xl font-semibold">This complaint is pending</h2>
-              {deadline ? (
+              {deadline && phase === 'open' && (
                 <p className="mt-2 text-[15px] leading-relaxed text-ink-soft">
                   The proceeding commenced on <strong>{formatDate(v.commenced)}</strong>. Under UDRP Rules 5(a) a response is due within 20 days, so around{' '}
                   <strong>{formatDate(deadline.due)}</strong>, or <strong>{formatDate(deadline.extended)}</strong> with the automatic four-day extension. Confirm the exact date in the provider&apos;s notice.
                 </p>
-              ) : (
+              )}
+              {deadline && phase === 'extension' && (
+                <p className="mt-2 text-[15px] leading-relaxed text-ink-soft">
+                  The proceeding commenced on <strong>{formatDate(v.commenced)}</strong>. The standard 20-day response period ended around <strong>{formatDate(deadline.due)}</strong>. If the respondent asked for the automatic four-day extension (Rules 5(b)), the response is due around{' '}
+                  <strong>{formatDate(deadline.extended)}</strong>. Confirm the exact date in the provider&apos;s notice.
+                </p>
+              )}
+              {deadline && phase === 'closed' && (
+                <p className="mt-2 text-[15px] leading-relaxed text-ink-soft">
+                  The proceeding commenced on <strong>{formatDate(v.commenced)}</strong>. The response period ended around <strong>{formatDate(deadline.due)}</strong> ({formatDate(deadline.extended)} with the automatic extension), so the case is now waiting for a panel to be appointed and decide. Panels are asked to decide within 14 days of appointment (Rules 15(b)).
+                </p>
+              )}
+              {!deadline && (
                 <p className="mt-2 text-[15px] leading-relaxed text-ink-soft">
                   The provider is still reviewing the complaint for formal compliance. The 20-day response period starts once the proceeding formally commences.
                 </p>
@@ -259,11 +272,13 @@ export default async function CaseDetailPage({ params }: PageProps) {
 
           <div className="mt-12">
             <HelpCta
-              title={v.pending ? 'Respond before the deadline' : 'Facing a similar dispute?'}
+              title={!v.pending ? 'Facing a similar dispute?' : phase === 'closed' ? 'Waiting on a decision?' : 'Respond before the deadline'}
               body={
-                v.pending
-                  ? 'If this is your domain, the response window is short. Tell us what happened and get a free, confidential review of your options.'
-                  : 'Tell us about your domain and get a free, confidential review with similar outcomes from our library.'
+                !v.pending
+                  ? 'Tell us about your domain and get a free, confidential review with similar outcomes from our library.'
+                  : phase === 'closed'
+                    ? 'If this is your domain, get a free, confidential review of what the decision could mean and what you can do next, including after a transfer order.'
+                    : 'If this is your domain, the response window is short. Tell us what happened and get a free, confidential review of your options.'
               }
               href={helpHref}
             />
